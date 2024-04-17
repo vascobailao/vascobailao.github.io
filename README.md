@@ -1,3 +1,13 @@
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LFWMGKRBFN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-LFWMGKRBFN');
+</script>
+
 # Data science portfolio by Vasco Fernandes
 
 This portfolio is a compilation of notebooks which I created for data analysis or for exploration of machine learning algorithms.
