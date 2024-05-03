@@ -37,7 +37,7 @@ Every day, we must decide which lockers to visit. This decision involves a **tra
 ## MTA Ridership Forecast
 
 [Github](https://github.com/vascobailao/mta-ridership)
-[nbviewer](https://github.com/vascobailao/mta-ridership/blob/main/solution.ipynb)
+[nbviewer](https://nbviewer.org/github/vascobailao/mta-ridership/blob/main/solution.ipynb)
 
 The Metropolitan Transit Authority, MTA runs the subway and buses in NYC. In order to better plan staff at various
 subway stations to serve passengers, it’s essential to understand the historical traffic pattern. Furthermore,
