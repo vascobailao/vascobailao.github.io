@@ -34,6 +34,18 @@ Every day, we must decide which lockers to visit. This decision involves a **tra
 
 ---
 
+## MTA Ridership Forecast
+
+[Github](https://github.com/vascobailao/mta-ridership)
+[nbviewer](https://github.com/vascobailao/mta-ridership/blob/main/solution.ipynb)
+
+The Metropolitan Transit Authority, MTA runs the subway and buses in NYC. In order to better plan staff at various
+subway stations to serve passengers, it’s essential to understand the historical traffic pattern. Furthermore,
+realistic forecasting on ridership is important for staff planners to assess how many staff members are needed
+over time.
+
+---
+
 ## Rossmann Uplift Model
 
 [Github](https://github.com/vascobailao/rossmann-uplift)
