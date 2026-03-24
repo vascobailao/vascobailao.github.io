@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Causal Inference for ML Engineers: A Practical Guide — Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --accent: #1a1a18; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 24px; margin: 32px 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">Causal ML</p>
+      <h1 class="post-title">Causal Inference for ML Engineers: A Practical Guide</h1>
+      <div class="post-meta">
+        <span>March 22, 2023</span>
+        <span class="dot"></span>
+        <span>22 min read</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Causal Inference</span>
+        <span class="tag">EconML</span>
+        <span class="tag">DoWhy</span>
+        <span class="tag">A/B Testing</span>
+        <span class="tag">Python</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>There is a reason every data science blog post eventually references the phrase "correlation is not causation" and then proceeds to build models that are entirely correlational. It is not hypocrisy — it is that the machinery for going from correlation to causation is genuinely hard, and for a long time, the tooling was exclusively in the hands of econometricians and statisticians who communicated in a language ML engineers were not trained to speak.</p>
+
+      <p>That has changed. The EconML and DoWhy libraries have made causal estimation accessible to Python practitioners. But accessible does not mean simple. I have spent two years applying causal methods in production — measuring incrementality of ad campaigns at Radancy, attributing the effect of process changes on lens-defect rates at ZEISS — and the gap between reading about double machine learning and actually shipping it is substantial.</p>
+
+      <p>This post is the guide I wish I had had.</p>
+
+      <h2>Why ML Engineers Should Care</h2>
+
+      <p>Standard ML answers predictive questions: given X, what is the distribution of Y? Causal inference answers interventional questions: if I change X, what happens to Y? The difference is enormous in practice.</p>
+
+      <p>Consider a digital advertising platform with historical data on campaign spend, targeting parameters, and application rates. A predictive model might tell you that campaigns with high spend correlate with high application rates. But if you increase spend on a low-performing campaign, will it convert better? Maybe the correlation exists because clients with stronger employer brands spend more — and it is the brand strength, not the spend, that drives conversions. Increasing spend on a weak brand does nothing.</p>
+
+      <p>Without causal thinking, you optimise the wrong variable. With it, you find the true lever.</p>
+
+      <p>The three questions causal inference answers that ML cannot:</p>
+
+      <ul>
+        <li><strong>Average Treatment Effect (ATE)</strong>: If we applied this intervention to everyone, what would the average effect be?</li>
+        <li><strong>Conditional Average Treatment Effect (CATE)</strong>: For a specific subgroup, what is the effect?</li>
+        <li><strong>Counterfactual</strong>: For this specific unit, what would have happened under a different treatment?</li>
+      </ul>
+
+      <h2>The Rubin Potential Outcomes Framework</h2>
+
+      <p>Before touching any code, you need to understand the fundamental problem. For each unit <em>i</em> (a person, a campaign, a machine), we observe either the outcome under treatment <em>Y(1)</em> or under control <em>Y(0)</em> — never both simultaneously. The individual treatment effect <em>τᵢ = Y(1) - Y(0)</em> is unidentifiable. This is the fundamental problem of causal inference.</p>
+
+      <p>We get around this by estimating average effects across populations, under assumptions. The key assumptions are:</p>
+
+      <ul>
+        <li><strong>Ignorability (unconfoundedness)</strong>: Given the observed covariates X, treatment assignment T is independent of potential outcomes. Written: <em>Y(0), Y(1) ⊥ T | X</em></li>
+        <li><strong>Positivity (overlap)</strong>: Every unit has a non-zero probability of receiving either treatment. Written: <em>0 &lt; P(T=1 | X) &lt; 1</em></li>
+        <li><strong>SUTVA</strong>: One unit's treatment doesn't affect another's outcome, and there is only one version of treatment.</li>
+      </ul>
+
+      <p>The first assumption is the one that will cause you problems in practice. It says that you have measured all confounders — all variables that affect both treatment assignment and outcome. In observational data, this is almost never guaranteed, and you must defend this assumption from domain knowledge.</p>
+
+      <h2>Propensity Score Methods: Where to Start</h2>
+
+      <p>Propensity score methods are the entry point for most practitioners. The propensity score <em>e(X) = P(T=1 | X)</em> is the probability of being treated given covariates. If two units have the same propensity score, they are exchangeable — the treatment is "as good as random" conditional on the score.</p>
+
+      <p>You estimate the propensity score with any classifier (logistic regression is canonical; gradient boosting often works better in practice), then use it for matching, weighting, or stratification.</p>
+
+<pre><code>import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+
+# Estimate propensity scores
+def estimate_propensity(X, T):
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    ps_model = LogisticRegression(C=1.0, max_iter=1000)
+    ps_model.fit(X_scaled, T)
+
+    propensity_scores = ps_model.predict_proba(X_scaled)[:, 1]
+
+    # Check overlap — critical before proceeding
+    treated_ps = propensity_scores[T == 1]
+    control_ps = propensity_scores[T == 0]
+
+    print(f"Treated PS: mean={treated_ps.mean():.3f}, std={treated_ps.std():.3f}")
+    print(f"Control PS:  mean={control_ps.mean():.3f}, std={control_ps.std():.3f}")
+    print(f"Overlap region: [{max(treated_ps.min(), control_ps.min()):.3f}, "
+          f"{min(treated_ps.max(), control_ps.max()):.3f}]")
+
+    return propensity_scores
+
+# Inverse Probability Weighting (IPW) ATE estimator
+def ipw_ate(Y, T, propensity_scores, trim_threshold=0.05):
+    # Trim extreme propensity scores to reduce variance
+    mask = (propensity_scores > trim_threshold) & \
+           (propensity_scores < 1 - trim_threshold)
+
+    Y, T, ps = Y[mask], T[mask], propensity_scores[mask]
+
+    # Horvitz-Thompson estimator
+    weights = T / ps - (1 - T) / (1 - ps)
+    ate = np.mean(weights * Y)
+
+    return ate</code></pre>
+
+      <div class="callout">
+        <p><strong>Always inspect overlap.</strong> If propensity scores for treated and control groups don't substantially overlap, your estimates will be driven by extrapolation, not by data. Plot the distributions and check before proceeding.</p>
+      </div>
+
+      <h2>Double Machine Learning: The Modern Standard</h2>
+
+      <p>Propensity score methods assume a parametric model for treatment assignment. Double Machine Learning (DML), introduced by Chernozhukov et al. in 2018, allows you to use flexible ML models for both nuisance estimation — without biasing the treatment effect estimate.</p>
+
+      <p>The key insight is "double robustness via cross-fitting." You partially out the effect of covariates from both the outcome and treatment, then estimate the treatment effect on the residuals. The procedure:</p>
+
+      <ol>
+        <li>Split data into K folds</li>
+        <li>For each fold: use the other K-1 folds to train models for <em>E[Y|X]</em> (outcome model) and <em>E[T|X]</em> (treatment model)</li>
+        <li>Generate out-of-fold residuals: <em>Ỹ = Y - Ê[Y|X]</em> and <em>T̃ = T - Ê[T|X]</em></li>
+        <li>Regress <em>Ỹ</em> on <em>T̃</em> — the coefficient is your ATE estimate</li>
+      </ol>
+
+<pre><code>from econml.dml import LinearDML, CausalForestDML
+from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
+from sklearn.model_selection import cross_val_predict
+
+# Linear DML — ATE under linearity assumption
+model_linear = LinearDML(
+    model_y=GradientBoostingRegressor(n_estimators=100),
+    model_t=GradientBoostingClassifier(n_estimators=100),
+    discrete_treatment=True,
+    cv=5,
+    random_state=42,
+)
+model_linear.fit(Y, T, X=X, W=W)  # W: additional controls, X: effect modifiers
+
+ate = model_linear.ate(X)
+ate_interval = model_linear.ate_interval(X, alpha=0.05)
+print(f"ATE: {ate:.4f} (95% CI: {ate_interval[0]:.4f}, {ate_interval[1]:.4f})")
+
+# Causal Forest — CATE estimation (heterogeneous treatment effects)
+model_cf = CausalForestDML(
+    model_y=GradientBoostingRegressor(n_estimators=100),
+    model_t=GradientBoostingClassifier(n_estimators=100),
+    n_estimators=1000,
+    discrete_treatment=True,
+    cv=5,
+    random_state=42,
+)
+model_cf.fit(Y, T, X=X, W=W)
+
+# Individual treatment effect estimates
+cate = model_cf.effect(X_test)
+cate_intervals = model_cf.effect_interval(X_test, alpha=0.05)</code></pre>
+
+      <h3>Choosing between LinearDML and CausalForestDML</h3>
+
+      <p>Use <code>LinearDML</code> when you believe the treatment effect is roughly constant across the population and you want interpretable coefficients. Use <code>CausalForestDML</code> when you suspect heterogeneous effects — different subgroups respond differently to treatment. For the incrementality work at Radancy, where we were trying to identify which campaign types and targeting parameters drove true lift versus those that just captured organic demand, heterogeneous effects were exactly what we were after.</p>
+
+      <h2>The Doubly Robust Estimator: Best of Both Worlds</h2>
+
+      <p>The doubly robust (DR) learner combines outcome modelling and propensity weighting. It is "doubly robust" in the sense that your estimate is consistent if <em>either</em> the outcome model or the propensity model is correctly specified — not necessarily both. This is a meaningful robustness guarantee in practice.</p>
+
+<pre><code>from econml.dr import DRLearner
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.linear_model import LassoCV
+
+dr_learner = DRLearner(
+    model_propensity=GradientBoostingClassifier(n_estimators=200),
+    model_regression=GradientBoostingRegressor(n_estimators=200),
+    model_final=LassoCV(cv=5),  # Final model for CATE
+    cv=5,
+    random_state=42,
+)
+dr_learner.fit(Y, T, X=X, W=W)
+
+# CATE for each unit in test set
+cate_dr = dr_learner.effect(X_test)
+
+# Feature importances from the final stage
+importances = dr_learner.feature_importances_</code></pre>
+
+      <h2>Difference-in-Differences: When You Have Time</h2>
+
+      <p>DML requires that you've measured all confounders — a strong assumption. Difference-in-Differences (DiD) sidesteps some of this by exploiting temporal structure. If you have pre-treatment and post-treatment observations for both treated and control units, and you're willing to assume that the two groups would have had parallel trends in the absence of treatment, you can identify the causal effect.</p>
+
+<pre><code>import pandas as pd
+import statsmodels.formula.api as smf
+
+# Standard DiD regression
+# Y ~ treat + post + treat*post + controls
+# The coefficient on treat*post is the ATT
+
+def did_estimate(df, outcome='Y', treat='treat', post='post', controls=None):
+    formula = f"{outcome} ~ {treat} + {post} + {treat}:{post}"
+    if controls:
+        formula += " + " + " + ".join(controls)
+
+    model = smf.ols(formula, data=df).fit(
+        cov_type='cluster',
+        cov_kwds={'groups': df['unit_id']}  # Cluster SEs at unit level
+    )
+
+    att = model.params[f'{treat}:{post}']
+    se = model.bse[f'{treat}:{post}']
+    ci = model.conf_int().loc[f'{treat}:{post}']
+
+    print(f"ATT: {att:.4f} ± {se:.4f}")
+    print(f"95% CI: [{ci[0]:.4f}, {ci[1]:.4f}]")
+    print(f"p-value: {model.pvalues[f'{treat}:{post}']:.4f}")
+
+    return model
+
+# Validate parallel trends: pre-treatment trends should be equal
+def parallel_trends_test(df, pre_periods, outcome='Y', treat='treat', unit='unit_id'):
+    pre_data = df[df['period'].isin(pre_periods)].copy()
+    # Event-study: interact treatment with each pre-period dummy
+    # Coefficients should be insignificantly different from zero
+    pass  # Implementation omitted for brevity</code></pre>
+
+      <p>The parallel trends assumption is untestable in the post-treatment period, but you can provide supporting evidence by testing whether pre-treatment trends were parallel. If they were not, you have a problem with the design, not the estimation.</p>
+
+      <h2>Causal Discovery: When You Don't Know the DAG</h2>
+
+      <p>The methods above require that you specify the causal graph — which variables are confounders, which are mediators, which are instruments. In complex manufacturing or biological systems, this graph is not known. Causal discovery algorithms attempt to learn it from data.</p>
+
+      <p>At ZEISS, we used this on dense SCADA sensor data to understand what process parameters were driving lens-scratch defects. The data had hundreds of correlated sensor readings, and domain experts disagreed on the causal pathways.</p>
+
+<pre><code>from causallearn.search.ConstraintBased.PC import pc
+from causallearn.utils.cit import fisherz
+from causallearn.graph.GraphClass import CausalGraph
+import numpy as np
+
+# PC Algorithm: constraint-based causal discovery
+# Assumes no latent confounders (strong assumption)
+cg = pc(
+    data=sensor_data_array,  # shape: (n_samples, n_variables)
+    alpha=0.05,              # significance level for conditional independence tests
+    indep_test=fisherz,      # Fisher Z for continuous data
+    stable=True,             # Use stable PC (less order-dependent)
+)
+
+# cg.G is the learned CPDAG (Complete Partially Directed Acyclic Graph)
+# Arrows that can be oriented are oriented; others remain undirected
+
+# For data with latent confounders, use FCI instead
+from causallearn.search.ConstraintBased.FCI import fci
+G, edges = fci(
+    dataset=sensor_data_array,
+    independence_test_method=fisherz,
+    alpha=0.05,
+)
+# FCI produces a PAG (Partial Ancestral Graph) — allows for latent variables</code></pre>
+
+      <div class="callout">
+        <p><strong>Causal discovery is hypothesis generation, not ground truth.</strong> Use the discovered graph as a starting point for domain expert review, not as an oracle. The PC and FCI algorithms have strong assumptions and can produce incorrect edges when those assumptions are violated. Treat the output as a set of testable hypotheses about the system.</p>
+      </div>
+
+      <h2>Building a Production Causal Pipeline</h2>
+
+      <p>Shipping causal estimates in production is different from running a one-off analysis. A few lessons:</p>
+
+      <h3>Automate assumption checking</h3>
+
+      <p>Before fitting any causal model, validate the assumptions programmatically. Check overlap (propensity score distributions), test pre-treatment parallel trends for DiD, check for near-perfect collinearity in the covariate set. If assumptions fail, alert rather than produce a bad estimate.</p>
+
+<pre><code>def validate_causal_assumptions(X, T, Y, method='dml'):
+    checks = {}
+
+    # 1. Overlap check
+    from sklearn.linear_model import LogisticRegression
+    ps = LogisticRegression(C=1.0).fit(X, T).predict_proba(X)[:, 1]
+    overlap_min = max(ps[T==1].min(), ps[T==0].min())
+    overlap_max = min(ps[T==1].max(), ps[T==0].max())
+    checks['overlap_width'] = overlap_max - overlap_min
+    checks['overlap_ok'] = checks['overlap_width'] > 0.3  # threshold
+
+    # 2. Sample size check
+    checks['n_treated'] = T.sum()
+    checks['n_control'] = (1 - T).sum()
+    checks['sample_ok'] = min(checks['n_treated'], checks['n_control']) > 100
+
+    # 3. Outcome variance check
+    checks['Y_var'] = Y.var()
+    checks['variance_ok'] = checks['Y_var'] > 0
+
+    return checks</code></pre>
+
+      <h3>Confidence intervals, always</h3>
+
+      <p>Point estimates without uncertainty quantification are nearly useless for decision-making. EconML provides bootstrap confidence intervals for all estimators. Budget the compute for them. In practice, 200 bootstrap samples is enough for most applications.</p>
+
+      <h3>Sensitivity analysis</h3>
+
+      <p>Every causal estimate rests on untestable assumptions. A sensitivity analysis asks: how strong would unmeasured confounding have to be to flip your conclusion? Rosenbaum bounds for observational studies, or the refutation tests in DoWhy, provide this.</p>
+
+<pre><code>import dowhy
+from dowhy import CausalModel
+
+# DoWhy provides a unified interface + refutation tests
+model = CausalModel(
+    data=df,
+    treatment='T',
+    outcome='Y',
+    common_causes=['X1', 'X2', 'X3'],
+    instruments=['Z']  # If you have an instrument
+)
+
+identified_estimand = model.identify_effect()
+estimate = model.estimate_effect(
+    identified_estimand,
+    method_name="backdoor.econml.dml.DML",
+    method_params={
+        "init_params": {
+            "model_y": GradientBoostingRegressor(),
+            "model_t": GradientBoostingClassifier(),
+        }
+    }
+)
+
+# Refutation tests — if your estimate is robust, these should NOT change it significantly
+refute_random = model.refute_estimate(
+    identified_estimand, estimate,
+    method_name="random_common_cause"
+)
+refute_placebo = model.refute_estimate(
+    identified_estimand, estimate,
+    method_name="placebo_treatment_refuter"
+)
+print(refute_random)
+print(refute_placebo)</code></pre>
+
+      <h2>Common Mistakes</h2>
+
+      <p><strong>Conditioning on colliders.</strong> If Z is caused by both T and Y, conditioning on Z (i.e., including it as a control) opens a spurious path between T and Y. This is the classic "selection bias" error. Draw your DAG before deciding what to control for.</p>
+
+      <p><strong>Controlling for mediators.</strong> If M lies on the causal path from T to Y (T → M → Y), controlling for M removes the very effect you're trying to measure. If you want the total effect, don't condition on mediators. If you want the direct effect, you need mediation analysis.</p>
+
+      <p><strong>Treating CATE estimates as individual predictions.</strong> CATE estimates are local average effects for subgroups, not individual predictions. The uncertainty on individual estimates from a causal forest is enormous. Report them with confidence intervals and be clear about what they represent.</p>
+
+      <p><strong>Ignoring multiple testing.</strong> When you compute CATEs across many subgroups, you have a multiple comparison problem. Apply Bonferroni correction or, better, use the RATE (Rank-Weighted Average Treatment Effect) metric from the GRF library for targeting policy evaluation.</p>
+
+      <h2>When to Use What</h2>
+
+      <p>A rough decision tree for method selection:</p>
+
+      <ul>
+        <li>Randomised experiment? → Use simple difference in means with robust SEs</li>
+        <li>Observational, good overlap, measurable confounders? → DML or DR-Learner</li>
+        <li>Observational, panel data, parallel trends plausible? → DiD</li>
+        <li>Observational, instrument available? → IV or LATE estimation</li>
+        <li>Don't know the causal graph? → Causal discovery (PC/FCI) + domain expert validation</li>
+        <li>Want to stress-test assumptions? → Sensitivity analysis via DoWhy refutations</li>
+      </ul>
+
+      <p>Causal inference is not a replacement for experimentation. When you can run an A/B test, run it. The methods in this post are for situations where randomisation is infeasible — ethically, economically, or logistically. Use them carefully, document your assumptions, and always triangulate with domain knowledge.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="mailto:vasco.bailao@gmail.com">Discuss via email</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>

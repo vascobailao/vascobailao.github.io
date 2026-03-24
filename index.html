@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vasco Fernandes — AI Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --border: #e8e8e5;
+      --text: #1a1a18;
+      --muted: #6b6b67;
+      --accent: #1a1a18;
+      --tag-bg: #f0f0ed;
+      --nav-h: 64px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      background: rgba(250, 250, 249, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    section {
+      padding: 96px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section:last-of-type { border-bottom: none; }
+
+    /* ── HERO ── */
+    #about {
+      padding-top: calc(var(--nav-h) + 80px);
+      padding-bottom: 96px;
+    }
+
+    .hero-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .hero-name {
+      font-size: clamp(36px, 5vw, 52px);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: clamp(18px, 2.5vw, 24px);
+      font-weight: 400;
+      color: var(--muted);
+      letter-spacing: -0.01em;
+      margin-bottom: 32px;
+    }
+
+    .hero-bio {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 600px;
+      line-height: 1.75;
+      margin-bottom: 40px;
+    }
+
+    .hero-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-links a {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 8px 18px;
+      border-radius: 4px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .hero-links a:hover {
+      border-color: var(--text);
+      background: var(--surface);
+    }
+
+    .hero-links a.primary {
+      background: var(--text);
+      color: #fff;
+      border-color: var(--text);
+    }
+
+    .hero-links a.primary:hover {
+      background: #333;
+      border-color: #333;
+    }
+
+    /* ── SECTION HEADERS ── */
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 48px;
+    }
+
+    /* ── EXPERIENCE ── */
+    .exp-list { display: flex; flex-direction: column; gap: 0; }
+
+    .exp-item {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 0 48px;
+      padding: 36px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .exp-item:last-child { border-bottom: 1px solid var(--border); }
+
+    .exp-meta {}
+
+    .exp-period {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .exp-company {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .exp-content {}
+
+    .exp-role {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .exp-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .exp-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      background: var(--tag-bg);
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+
+    /* ── PROJECTS ── */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .project-card {
+      background: var(--surface);
+      padding: 32px;
+      transition: background 0.15s;
+    }
+
+    .project-card:hover { background: var(--bg); }
+
+    .project-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .project-name {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+
+    .project-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 16px;
+    }
+
+    /* ── BLOG ── */
+    .blog-coming {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .blog-post-link {
+      text-decoration: none;
+      display: block;
+    }
+
+    .blog-post-placeholder {
+      background: var(--surface);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      transition: background 0.15s;
+    }
+
+    .blog-post-link:hover .blog-post-placeholder {
+      background: var(--bg);
+    }
+
+    .post-text {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .post-category {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .blog-post-placeholder .post-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .blog-post-placeholder .post-title {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    /* ── CONTACT ── */
+    #contact { padding-bottom: 120px; }
+
+    .contact-line {
+      font-size: clamp(24px, 3.5vw, 38px);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      margin-bottom: 40px;
+      max-width: 560px;
+    }
+
+    .contact-links {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .contact-row:last-child { border-bottom: 1px solid var(--border); }
+
+    .contact-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .contact-val {
+      font-size: 14px;
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .contact-val:hover { color: var(--muted); }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .footer-right {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .container { padding: 0 20px; }
+      .nav-inner { padding: 0 20px; }
+      .nav-links { gap: 16px; }
+      .exp-item { grid-template-columns: 1fr; gap: 8px; }
+      .projects-grid { grid-template-columns: 1fr; }
+      .footer-inner { padding: 0 20px; flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="#about">vasco fernandes</a>
+      <ul class="nav-links">
+        <li><a href="#about">about</a></li>
+        <li><a href="#experience">experience</a></li>
+        <li><a href="#projects">projects</a></li>
+        <li><a href="#blog">writing</a></li>
+        <li><a href="#contact">contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="container">
+      <p class="hero-label">Senior AI Engineer / Munich, Germany</p>
+      <h1 class="hero-name">Vasco Fernandes</h1>
+      <p class="hero-title">Building production AI systems that actually ship.</p>
+      <p class="hero-bio">
+        I work at the intersection of machine learning, agentic AI, and production engineering.
+        Currently building agentic RAG systems at SAP and leading time-series forecasting
+        at ZEISS. Previously at PwC, AdMomentum, and Radancy. BSc &amp; MSc in Computer Science
+        (Machine Learning &amp; Robotics) from Técnico Lisboa.
+      </p>
+      <div class="hero-links">
+        <a href="#contact" class="primary">Get in touch</a>
+        <a href="#experience">View experience</a>
+        <a href="mailto:vasco.bailao@gmail.com">Email me</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section id="experience">
+    <div class="container">
+      <p class="section-label">Experience</p>
+      <div class="exp-list">
+
+        <div class="exp-item">
+          <div class="exp-meta">
+            <p class="exp-period">Nov 2025 — Present</p>
+            <p class="exp-company">SAP</p>
+          </div>
+          <div class="exp-content">
+            <p class="exp-role">Senior AI Engineer</p>
+            <p class="exp-desc">Architected and led a production-grade agentic RAG system using LangGraph orchestration with 8+ agent functions (semantic search, metadata filtering, self-query, attachment processing). Built a RAG evaluation framework with deterministic scoring achieving 100% consistency across 10+ test iterations. Engineered a scalable document ingestion pipeline supporting PDF, PPTX, DOCX, and video formats via Apache Tika and async summarization via SAP Event Mesh.</p>
+            <div class="exp-tags">
+              <span class="tag">LangGraph</span>
+              <span class="tag">RAG</span>
+              <span class="tag">AWS Bedrock</span>
+              <span class="tag">Azure OpenAI</span>
+              <span class="tag">Agentic AI</span>
+              <span class="tag">Python</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-item">
+          <div class="exp-meta">
+            <p class="exp-period">Nov 2024 — Present</p>
+            <p class="exp-company">ZEISS</p>
+          </div>
+          <div class="exp-content">
+            <p class="exp-role">Senior Data Scientist</p>
+            <p class="exp-desc">Led time-series forecasting initiatives across ZEISS departments using GenAI-based approaches for financial scenario modeling. Directed causal discovery projects (PC/FCI, GES, LiNGAM) on dense sensor data, architected doubly robust estimators (DML, DR-Learner) to quantify causal impact on manufacturing quality, and built an enterprise log analytics platform with unsupervised anomaly detection reducing MTTD by 4%.</p>
+            <div class="exp-tags">
+              <span class="tag">Time Series</span>
+              <span class="tag">Causal Inference</span>
+              <span class="tag">Azure ML</span>
+              <span class="tag">Databricks</span>
+              <span class="tag">DoWhy</span>
+              <span class="tag">PySpark</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-item">
+          <div class="exp-meta">
+            <p class="exp-period">Jun 2025 — Dec 2025</p>
+            <p class="exp-company">PwC</p>
+          </div>
+          <div class="exp-content">
+            <p class="exp-role">Senior AI Engineer</p>
+            <p class="exp-desc">Delivered a production conversational RAG chatbot for EGA audit workflows, compressing days-long manual control comparisons into real-time dialogue with &gt;90% precision/recall. Engineered HyDE-style synthetic queries, hierarchical embeddings, re-ranking, and multi-turn conversational memory. Containerised Spark-based preprocessing on Azure Databricks with CI/CD in Azure DevOps.</p>
+            <div class="exp-tags">
+              <span class="tag">LangChain</span>
+              <span class="tag">GPT-4</span>
+              <span class="tag">pgvector</span>
+              <span class="tag">Azure Databricks</span>
+              <span class="tag">Streamlit</span>
+              <span class="tag">RAG</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-item">
+          <div class="exp-meta">
+            <p class="exp-period">Mar 2024 — Nov 2024</p>
+            <p class="exp-company">AdMomentum</p>
+          </div>
+          <div class="exp-content">
+            <p class="exp-role">Lead AI Engineer / Architect</p>
+            <p class="exp-desc">Designed multi-modal RAG systems (video/image/audio/text) using CLIP, ViT, BLIP-2 embeddings and FAISS/Pinecone vector stores. Led video segmentation and keyframe detection on AWS (Batch, EKS, S3). Fine-tuned Qwen-VL2 with LoRA reducing fine-tuning time by ~40%. Built a creative optimization system combining LightGBM, linear programming, and survival analysis deployed via FastAPI on EKS.</p>
+            <div class="exp-tags">
+              <span class="tag">Multi-modal AI</span>
+              <span class="tag">LoRA fine-tuning</span>
+              <span class="tag">FAISS</span>
+              <span class="tag">Computer Vision</span>
+              <span class="tag">AWS EKS</span>
+              <span class="tag">PyTorch</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-item">
+          <div class="exp-meta">
+            <p class="exp-period">Jan 2021 — Sep 2024</p>
+            <p class="exp-company">Radancy</p>
+          </div>
+          <div class="exp-content">
+            <p class="exp-role">Senior Data Scientist</p>
+            <p class="exp-desc">Built incrementality testing methodologies using DiD analysis and causal inference pipelines (DoubleML, DR-Learners, CATE via EconML) for $10M+ ad spend across enterprise clients. Deployed linear programming (PuLP) and RL (Stable Baselines3) for real-time CPC bid optimization, achieving a 6% CPA reduction. Pioneered GPT/T5-based ad copy generation deployed as FastAPI microservices on EKS.</p>
+            <div class="exp-tags">
+              <span class="tag">Causal Inference</span>
+              <span class="tag">Reinforcement Learning</span>
+              <span class="tag">NLP</span>
+              <span class="tag">Linear Programming</span>
+              <span class="tag">EconML</span>
+              <span class="tag">Airflow</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-item">
+          <div class="exp-meta">
+            <p class="exp-period">Mar 2020 — Jan 2021</p>
+            <p class="exp-company">AXOVISION</p>
+          </div>
+          <div class="exp-content">
+            <p class="exp-role">Data Scientist</p>
+            <p class="exp-desc">Built a Mean-Variance Optimization engine (PyPortfolioOpt) reducing portfolio volatility by ~7.6%. Developed an LSTM-based option pricing model in PyTorch achieving 2.7% higher daily returns. Deployed BERT sentiment analysis on market data, correlating sentiment spikes with short-term price movements.</p>
+            <div class="exp-tags">
+              <span class="tag">PyPortfolioOpt</span>
+              <span class="tag">LSTM</span>
+              <span class="tag">BERT</span>
+              <span class="tag">PyTorch</span>
+              <span class="tag">Airflow</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-item">
+          <div class="exp-meta">
+            <p class="exp-period">Mar 2018 — Aug 2020</p>
+            <p class="exp-company">Daimler Truck AG</p>
+          </div>
+          <div class="exp-content">
+            <p class="exp-role">Data Scientist</p>
+            <p class="exp-desc">Designed a Spark Scala pipeline ingesting ~100GB/day from 10,000+ connected vehicles. Built driver behaviour ranking models using telemetry data and researched predictive maintenance via anomaly detection.</p>
+            <div class="exp-tags">
+              <span class="tag">Spark Scala</span>
+              <span class="tag">Scikit-learn</span>
+              <span class="tag">Predictive Maintenance</span>
+              <span class="tag">IoT</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="container">
+      <p class="section-label">Selected Projects</p>
+      <div class="projects-grid">
+
+        <div class="project-card">
+          <p class="project-number">01</p>
+          <p class="project-name">Agentic RAG Evaluation Framework</p>
+          <p class="project-desc">Production-grade evaluation system with deterministic scoring achieving 100% consistency across 10+ test iterations. Validates retrieval quality through hybrid search, Cohere/Bedrock reranking, and multi-stage pipelines.</p>
+          <div class="exp-tags">
+            <span class="tag">LangGraph</span>
+            <span class="tag">AWS Bedrock</span>
+            <span class="tag">Hybrid Search</span>
+          </div>
+        </div>
+
+        <div class="project-card">
+          <p class="project-number">02</p>
+          <p class="project-name">Audit RAG Chatbot — PwC</p>
+          <p class="project-desc">Conversational RAG system for audit workflows ingesting EGA tables and Procure-to-Pay PDFs. Compressed days of manual audit work into real-time dialogue with &gt;90% precision/recall in control-delta detection.</p>
+          <div class="exp-tags">
+            <span class="tag">LangChain</span>
+            <span class="tag">GPT-4 Vision</span>
+            <span class="tag">pgvector</span>
+          </div>
+        </div>
+
+        <div class="project-card">
+          <p class="project-number">03</p>
+          <p class="project-name">Manufacturing Causal Discovery — ZEISS</p>
+          <p class="project-desc">Led causal-discovery projects (PC/FCI, GES, LiNGAM) on dense sensor data. Architected doubly robust estimators and Bayesian-network simulators for what-if interventions via do-calculus, guiding engineering quality decisions.</p>
+          <div class="exp-tags">
+            <span class="tag">DoWhy</span>
+            <span class="tag">EconML</span>
+            <span class="tag">Bayesian Networks</span>
+          </div>
+        </div>
+
+        <div class="project-card">
+          <p class="project-number">04</p>
+          <p class="project-name">Multi-Modal AI Platform — AdMomentum</p>
+          <p class="project-desc">End-to-end multi-modal RAG platform processing video, image, audio, and text. Integrated CLIP/ViT embeddings, FAISS/Pinecone vector stores, and fine-tuned Qwen-VL2 with LoRA. Deployed on AWS EKS with KEDA auto-scaling.</p>
+          <div class="exp-tags">
+            <span class="tag">CLIP</span>
+            <span class="tag">LoRA</span>
+            <span class="tag">AWS EKS</span>
+          </div>
+        </div>
+
+        <div class="project-card">
+          <p class="project-number">05</p>
+          <p class="project-name">RTB Bid Optimization Engine</p>
+          <p class="project-desc">Linear programming (PuLP) and Reinforcement Learning (Stable Baselines3) system for real-time CPC bid optimization across $10M+ ad spend. Achieved 6% CPA reduction through dynamic intra-day bid adjustments from RTB feedback.</p>
+          <div class="exp-tags">
+            <span class="tag">RL</span>
+            <span class="tag">PuLP</span>
+            <span class="tag">Stable Baselines3</span>
+          </div>
+        </div>
+
+        <div class="project-card">
+          <p class="project-number">06</p>
+          <p class="project-name">Enterprise Log Anomaly Detection</p>
+          <p class="project-desc">Enterprise-scale log analytics platform for pharmaceutical IoL lens production. Unsupervised learning (autoencoders, isolation forests) combined with NLP/Transformers reduced MTTD by 4% and alert fatigue by 7%.</p>
+          <div class="exp-tags">
+            <span class="tag">Autoencoders</span>
+            <span class="tag">LSTM</span>
+            <span class="tag">SHAP</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOG -->
+  <section id="blog">
+    <div class="container">
+      <p class="section-label">Writing</p>
+      <div class="blog-coming">
+
+        <a class="blog-post-link" href="posts/the-nature-of-work-is-changing.html">
+          <div class="blog-post-placeholder">
+            <div class="post-text">
+              <span class="post-category">Opinion</span>
+              <span class="post-title">Harari Is Wrong About the Useless Class (And Right About Everything Else)</span>
+            </div>
+            <span class="post-meta">Mar 10, 2026 &nbsp;·&nbsp; 14 min</span>
+          </div>
+        </a>
+
+        <a class="blog-post-link" href="posts/agentic-ai-in-the-enterprise.html">
+          <div class="blog-post-placeholder">
+            <div class="post-text">
+              <span class="post-category">Agentic AI</span>
+              <span class="post-title">Agentic AI in the Enterprise: Lessons from the Field</span>
+            </div>
+            <span class="post-meta">Feb 4, 2026 &nbsp;·&nbsp; 20 min</span>
+          </div>
+        </a>
+
+        <a class="blog-post-link" href="posts/building-production-rag-systems.html">
+          <div class="blog-post-placeholder">
+            <div class="post-text">
+              <span class="post-category">RAG Engineering</span>
+              <span class="post-title">Building Production RAG Systems That Don't Hallucinate</span>
+            </div>
+            <span class="post-meta">Dec 12, 2024 &nbsp;·&nbsp; 18 min</span>
+          </div>
+        </a>
+
+        <a class="blog-post-link" href="posts/finetuning-llms-lora-quantization.html">
+          <div class="blog-post-placeholder">
+            <div class="post-text">
+              <span class="post-category">LLM Engineering</span>
+              <span class="post-title">Fine-Tuning LLMs Efficiently: LoRA, Quantization, and Real-World Trade-offs</span>
+            </div>
+            <span class="post-meta">Sep 3, 2024 &nbsp;·&nbsp; 19 min</span>
+          </div>
+        </a>
+
+        <a class="blog-post-link" href="posts/causal-inference-for-ml-engineers.html">
+          <div class="blog-post-placeholder">
+            <div class="post-text">
+              <span class="post-category">Causal ML</span>
+              <span class="post-title">Causal Inference for ML Engineers: A Practical Guide</span>
+            </div>
+            <span class="post-meta">Mar 22, 2023 &nbsp;·&nbsp; 22 min</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="container">
+      <p class="section-label">Contact</p>
+      <p class="contact-line">Open to interesting problems.<br>Let's talk.</p>
+      <div class="contact-links">
+        <div class="contact-row">
+          <span class="contact-label">Email</span>
+          <a class="contact-val" href="mailto:vasco.bailao@gmail.com">vasco.bailao@gmail.com</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-label">GitHub</span>
+          <a class="contact-val" href="https://github.com/vascobailao" target="_blank" rel="noopener">github.com/vascobailao</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-label">Location</span>
+          <span class="contact-val">Munich, Germany</span>
+        </div>
+        <div class="contact-row">
+          <span class="contact-label">Phone</span>
+          <a class="contact-val" href="tel:+491756154265">+49 175 6154 265</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-right">© 2026</span>
+    </div>
+  </footer>
+
+</body>
+</html>

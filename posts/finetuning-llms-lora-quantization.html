@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fine-Tuning LLMs Efficiently: LoRA, Quantization, and Real-World Trade-offs — Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 24px; margin: 32px 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">LLM Engineering</p>
+      <h1 class="post-title">Fine-Tuning LLMs Efficiently: LoRA, Quantization, and Real-World Trade-offs</h1>
+      <div class="post-meta">
+        <span>September 3, 2024</span>
+        <span class="dot"></span>
+        <span>19 min read</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Fine-tuning</span>
+        <span class="tag">LoRA</span>
+        <span class="tag">QLoRA</span>
+        <span class="tag">PyTorch</span>
+        <span class="tag">PEFT</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>Fine-tuning a large language model is one of those things that feels deceptively approachable — there are tutorials, Colab notebooks, and well-documented libraries — until you try to do it on a domain-specific task with constrained GPU resources and a production quality bar. Then you discover that the gap between "it ran" and "it works well" is enormous, and the tradeoffs between speed, memory, and output quality are rarely discussed honestly.</p>
+
+      <p>I fine-tuned Qwen-VL2 for multi-modal ad content tagging and analysis, producing structured labels across fashion, automotive, and technology categories. The model needed to understand both visual content and associated text, produce consistent structured output, and run on hardware that made full fine-tuning economically indefensible. This post covers what I learned.</p>
+
+      <h2>Why Fine-Tune at All?</h2>
+
+      <p>Before committing to fine-tuning, exhaust the alternatives. Prompt engineering is faster, cheaper, and easier to update. Few-shot examples in-context can produce surprisingly good domain adaptation. For many tasks, a well-crafted system prompt and 10-20 examples will get you 80% of the way to what fine-tuning achieves.</p>
+
+      <p>Fine-tuning becomes worth it when:</p>
+
+      <ul>
+        <li>You need consistent structured output format that in-context examples don't reliably produce</li>
+        <li>Your domain has significant distribution shift from the pre-training data (legal, medical, highly specialised manufacturing)</li>
+        <li>You need to teach the model a domain-specific reasoning pattern, not just domain knowledge</li>
+        <li>Latency requirements preclude the long context windows needed for many-shot prompting</li>
+        <li>You are deploying to an environment where you cannot call an external API</li>
+      </ul>
+
+      <p>For our ad tagging task, it was the combination of structured output consistency and the need for deployment on a private AWS EKS cluster (no outbound API calls to frontier models) that made fine-tuning necessary.</p>
+
+      <h2>LoRA: The Math Behind Parameter-Efficient Fine-Tuning</h2>
+
+      <p>Full fine-tuning updates all model parameters. For a 7B parameter model, this means storing and optimising 7 billion floating point numbers — approximately 28GB in fp32, 14GB in bf16, just for the weights, before considering gradients and optimiser states which can triple this.</p>
+
+      <p>LoRA (Low-Rank Adaptation) exploits a key insight: the weight updates learned during fine-tuning tend to have low intrinsic rank. Instead of learning a full update matrix ΔW of shape (d_model × d_model), LoRA parameterises the update as a product of two low-rank matrices: ΔW = BA, where B is (d_model × r) and A is (r × d_model), with r ≪ d_model.</p>
+
+      <p>During training, only A and B are updated. The original weights W are frozen. At inference, the adapted weight is W + BA — this can be computed as a single matrix once and merged in, adding zero inference latency.</p>
+
+      <p>The number of trainable parameters scales as 2 × r × d_model per adapted layer, versus d_model² for full fine-tuning. With r=16 and d_model=4096 (a typical 7B architecture), this is 131K parameters per layer instead of 16.7M — a 128× reduction.</p>
+
+<pre><code>from peft import LoraConfig, get_peft_model, TaskType
+
+lora_config = LoraConfig(
+    task_type=TaskType.CAUSAL_LM,
+    r=16,                          # Rank of decomposition matrices
+    lora_alpha=32,                 # Scaling factor: effective_lr = lr * alpha/r
+    lora_dropout=0.05,
+    bias="none",                   # Don't adapt bias terms
+    target_modules=[               # Which layers to adapt
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj",
+    ],
+)
+
+model = get_peft_model(base_model, lora_config)
+model.print_trainable_parameters()
+# trainable params: 83,886,080 || all params: 7,241,732,096 || trainable%: 1.1585</code></pre>
+
+      <h3>Choosing the rank r</h3>
+
+      <p>Lower r → fewer parameters, faster training, less expressivity. Higher r → more capacity, risk of overfitting on small datasets. For most tasks, r=8 to r=64 is the practical range. Start at r=16, validate on a held-out set, and tune from there. Don't blindly increase r hoping for better results — beyond a certain point the additional capacity doesn't help and you're just adding noise.</p>
+
+      <p>The alpha parameter deserves special attention. Conceptually, alpha/r is a scaling factor applied to the LoRA update. Setting alpha=2r (so alpha=32 when r=16) is a common default that has worked well across tasks. This keeps the effective learning rate stable across different rank choices, making hyperparameter transfer easier when you experiment with different r values.</p>
+
+      <h2>QLoRA: Getting to 4-bit</h2>
+
+      <p>Even with LoRA, loading a 7B model in bf16 requires ~14GB. If you're running on consumer or cloud GPUs with 16-24GB VRAM (A10G, 3090, 4090), you're tight. QLoRA (Quantized LoRA) pushes further: quantize the frozen base model weights to 4-bit NF4 (NormalFloat4), keep the LoRA adapters in bf16, and train only the adapters.</p>
+
+      <p>The key insight is that quantization noise in frozen weights is tolerable because those weights aren't being updated — only the adapters are. The adapters remain in full precision so their gradients are accurate.</p>
+
+<pre><code>import torch
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,   # Nested quantization for extra memory savings
+    bnb_4bit_quant_type="nf4",        # NormalFloat4: better for normally-distributed weights
+    bnb_4bit_compute_dtype=torch.bfloat16,  # Compute in bf16 during forward/backward
+)
+
+model = AutoModelForCausalLM.from_pretrained(
+    "Qwen/Qwen2-VL-7B-Instruct",
+    quantization_config=bnb_config,
+    device_map="auto",
+    torch_dtype=torch.bfloat16,
+    trust_remote_code=True,
+)
+
+# Critical: prepare for k-bit training
+from peft import prepare_model_for_kbit_training
+model = prepare_model_for_kbit_training(
+    model,
+    use_gradient_checkpointing=True,  # Trade compute for memory
+)
+
+# Now apply LoRA on top of the quantized model
+model = get_peft_model(model, lora_config)</code></pre>
+
+      <p>With QLoRA + gradient checkpointing, we trained Qwen-VL2-7B on 2× A10G GPUs (24GB each). Full fine-tuning of the same model would have required 8×A100 80GB. The training time was approximately 40% longer per step due to gradient checkpointing overhead, but the total compute cost was dramatically lower.</p>
+
+      <div class="callout">
+        <p><strong>Memory calculation for QLoRA:</strong> Base model in 4-bit: ~4GB for 7B parameters. LoRA adapters in bf16: ~200MB (1.1% trainable × 7B × 2 bytes). Activations (with gradient checkpointing): ~8GB. Optimiser states for adapters only: ~400MB. Total: ~13GB — fits on a single A10G.</p>
+      </div>
+
+      <h2>Dataset Construction: Chain-of-Thought Is Not Optional</h2>
+
+      <p>The quality of your training data matters more than any hyperparameter. For our multi-modal tagging task, we paired output from Grounding DINO (object detection bounding boxes) and SAM (segmentation masks) with corresponding text descriptions, then used GPT-4V to generate reasoning traces that explained why each label was assigned.</p>
+
+      <p>The key decision was to train on the chain-of-thought reasoning, not just the final label. This dramatically improved the model's performance on edge cases — inputs that were ambiguous or outside the modal training distribution.</p>
+
+<pre><code># Example training example format (JSONL)
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a precise ad content analyst. Analyse the provided image and text, then produce structured labels for detected objects, their prominence, and relevance to the ad's message. Think step by step before outputting your final JSON."
+    },
+    {
+      "role": "user",
+      "content": [
+        {"type": "image", "image": "&lt;base64_encoded_image&gt;"},
+        {"type": "text", "text": "Ad copy: 'New collection. Autumn/Winter 2024.' Detected regions: [bounding box coordinates]. Analyse this ad."}
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": "&lt;thinking&gt;\nThe image shows a fashion editorial with a model wearing a structured coat. The dominant colors are earth tones - browns, taupes, and off-whites consistent with an autumn theme.\n\nDetected objects from DINO:\n1. Person/model - large central bounding box (0.15, 0.05, 0.85, 0.95) - high prominence\n2. Outerwear/coat - overlapping with person box - primary product\n3. Accessories - partial detection of bag at lower right\n\nThe ad copy confirms autumn/winter positioning. No product name or brand is visible in the image. The minimalist aesthetic and editorial photography style suggests a premium/luxury positioning.\n\nLabel assignments:\n- Category: Fashion/Apparel\n- Subcategory: Outerwear\n- Season: Autumn/Winter\n- Style: Editorial/Luxury\n- Primary object: Coat (prominence: 0.82)\n- Human presence: Yes (model)\n- Text-image alignment: High (season match)\n&lt;/thinking&gt;\n\n{\"category\": \"fashion_apparel\", \"subcategory\": \"outerwear\", \"season\": \"autumn_winter\", \"style_tags\": [\"editorial\", \"minimalist\", \"luxury\"], \"primary_objects\": [{\"label\": \"coat\", \"prominence\": 0.82, \"bbox\": [0.15, 0.1, 0.82, 0.9]}], \"human_presence\": true, \"text_image_alignment\": \"high\", \"confidence\": 0.91}"
+    }
+  ]
+}</code></pre>
+
+      <p>Training on CoT traces required more data generation effort, but the resulting model was significantly more robust. On our held-out evaluation set, the CoT-trained model outperformed the label-only model by 14 BLEU points and showed much lower variance on out-of-distribution inputs.</p>
+
+      <h2>Training Configuration That Actually Works</h2>
+
+<pre><code>from transformers import TrainingArguments
+from trl import SFTTrainer
+
+training_args = TrainingArguments(
+    output_dir="./qwen-vl-ad-tagger",
+    num_train_epochs=3,
+    per_device_train_batch_size=1,          # Keep small for VL models
+    gradient_accumulation_steps=8,          # Effective batch size = 8
+    warmup_ratio=0.03,
+    learning_rate=2e-4,                     # Higher LR works well with LoRA
+    lr_scheduler_type="cosine",
+    bf16=True,
+    logging_steps=10,
+    save_strategy="epoch",
+    eval_strategy="epoch",
+    load_best_model_at_end=True,
+    metric_for_best_model="eval_loss",
+    dataloader_num_workers=4,
+    group_by_length=True,                   # Reduces padding waste
+    report_to="wandb",
+
+    # Memory optimisation
+    gradient_checkpointing=True,
+    optim="paged_adamw_32bit",             # Paged optimiser reduces VRAM spikes
+    max_grad_norm=0.3,                      # Gradient clipping for stability
+)
+
+trainer = SFTTrainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=eval_dataset,
+    tokenizer=tokenizer,
+    max_seq_length=2048,
+    dataset_text_field="text",             # Or use formatting_func for custom formats
+    packing=False,                          # Disable for VL models with image tokens
+)
+
+trainer.train()</code></pre>
+
+      <h3>Learning rate and stability</h3>
+
+      <p>LoRA is more tolerant of higher learning rates than full fine-tuning, because only the small adapter matrices are being updated. We found 1e-4 to 3e-4 to be the sweet spot. Below 1e-4, training is slow and may not converge within your compute budget. Above 5e-4, you start seeing instability, especially in early epochs.</p>
+
+      <p>The cosine scheduler with a short warmup (3% of steps) outperformed constant learning rate and linear decay in our experiments. The key is that cosine decay allows the model to make large updates early when gradients are informative, then refine with smaller steps as the loss flattens.</p>
+
+      <h2>Post-Training Quantization for Deployment</h2>
+
+      <p>After fine-tuning, you typically want to merge the LoRA adapters into the base weights and quantize for deployment. The adapter merge is lossless — it is just a matrix addition. The subsequent quantization introduces approximation error, and the tradeoff between memory/speed and quality is worth measuring carefully.</p>
+
+<pre><code># Step 1: Merge LoRA adapters into base model
+model = model.merge_and_unload()  # Returns a standard HF model with merged weights
+
+# Step 2: Save in bf16 for reference
+model.save_pretrained("./merged-bf16", safe_serialization=True)
+
+# Step 3: Post-Training Quantization options
+# Option A: 8-bit dynamic quantization (PyTorch native)
+import torch
+model_8bit = torch.quantization.quantize_dynamic(
+    model_cpu,
+    {torch.nn.Linear},
+    dtype=torch.qint8
+)
+
+# Option B: GPTQ (more accurate 4-bit, slower to calibrate)
+from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
+
+quantize_config = BaseQuantizeConfig(
+    bits=4,
+    group_size=128,         # Smaller group = more accurate, more memory
+    desc_act=False,         # True gives better accuracy but slower
+)
+
+model_gptq = AutoGPTQForCausalLM.from_pretrained(
+    "./merged-bf16",
+    quantize_config=quantize_config,
+)
+model_gptq.quantize(calibration_dataset)  # Calibrate on ~128 representative samples
+model_gptq.save_quantized("./merged-gptq-4bit")
+
+# Option C: AWQ (faster inference than GPTQ, similar quality)
+from awq import AutoAWQForCausalLM
+
+model_awq = AutoAWQForCausalLM.from_pretrained("./merged-bf16")
+model_awq.quantize(
+    tokenizer,
+    quant_config={"zero_point": True, "q_group_size": 128, "w_bit": 4, "version": "GEMM"}
+)
+model_awq.save_quantized("./merged-awq-4bit")</code></pre>
+
+      <p>In our benchmark, GPTQ-4bit reduced model size from 14GB (bf16) to 4GB, with a 1.8% average accuracy drop on our task-specific evaluation set. AWQ-4bit showed nearly identical quality to GPTQ-4bit but with 15% faster inference due to its hand-optimised CUDA kernels. For production latency-sensitive deployments, AWQ is the right choice.</p>
+
+      <h2>Evaluation: BLEU Is Not Enough</h2>
+
+      <p>Standard generation metrics — BLEU, ROUGE — are inadequate for evaluating structured output tasks. A prediction that gets the right labels in the wrong JSON field scores poorly on BLEU but may be mostly correct. We built a task-specific evaluation suite:</p>
+
+<pre><code>from sklearn.metrics import f1_score, precision_score, recall_score
+import json
+
+def evaluate_structured_output(predictions: list[str], references: list[str]) -> dict:
+    metrics = {}
+
+    parsed_preds, parsed_refs = [], []
+    parse_failures = 0
+
+    for pred, ref in zip(predictions, references):
+        try:
+            pred_json = extract_json(pred)
+            ref_json = json.loads(ref)
+            parsed_preds.append(pred_json)
+            parsed_refs.append(ref_json)
+        except (json.JSONDecodeError, ValueError):
+            parse_failures += 1
+            parsed_preds.append({})
+            parsed_refs.append(json.loads(ref))
+
+    metrics["parse_success_rate"] = 1 - (parse_failures / len(predictions))
+
+    # Category classification accuracy
+    pred_cats = [p.get("category", "__missing__") for p in parsed_preds]
+    ref_cats = [r.get("category") for r in parsed_refs]
+    metrics["category_accuracy"] = sum(p == r for p, r in zip(pred_cats, ref_cats)) / len(pred_cats)
+
+    # Multi-label style tag F1
+    pred_tags = [set(p.get("style_tags", [])) for p in parsed_preds]
+    ref_tags = [set(r.get("style_tags", [])) for r in parsed_refs]
+    tag_f1s = []
+    for p, r in zip(pred_tags, ref_tags):
+        if not r:
+            continue
+        precision = len(p & r) / len(p) if p else 0
+        recall = len(p & r) / len(r)
+        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+        tag_f1s.append(f1)
+    metrics["style_tag_f1"] = sum(tag_f1s) / len(tag_f1s) if tag_f1s else 0
+
+    # Confidence calibration (predicted confidence vs. actual accuracy)
+    pred_confidences = [p.get("confidence", 0.5) for p in parsed_preds]
+    actual_correct = [
+        float(p.get("category") == r.get("category"))
+        for p, r in zip(parsed_preds, parsed_refs)
+    ]
+    # ECE (Expected Calibration Error)
+    metrics["ece"] = expected_calibration_error(pred_confidences, actual_correct)
+
+    return metrics</code></pre>
+
+      <h2>Things That Will Bite You</h2>
+
+      <p><strong>Catastrophic forgetting of the instruction-following format.</strong> Fine-tuning on task-specific data can degrade the model's ability to follow general instructions. Always evaluate on a general benchmark alongside your task-specific benchmark. If you see degradation, add some general instruction-following examples to your training set (5-10% of total data is usually sufficient).</p>
+
+      <p><strong>Image token count explosion.</strong> For vision-language models, image tokens can consume most of your context window. A 336×336 image in Qwen-VL2 produces ~256 tokens. At batch size 1 with gradient checkpointing, this is manageable. Scale up batch size and the VRAM cost per image scales with it. Always compute your worst-case token count before sizing your GPU.</p>
+
+      <p><strong>Training data format drift.</strong> The fine-tuned model is extraordinarily sensitive to input format at inference time. If you trained with a specific system prompt format, you must use exactly that format at inference. We discovered this painfully when a template change in our inference service caused the model to revert to generic, non-structured outputs. Pin your prompt templates and treat them as part of the model artifact.</p>
+
+      <p><strong>Overfitting is hard to detect from loss alone.</strong> Training loss can plateau or even decrease while the model is overfitting to surface patterns in your training data. Always track your task-specific evaluation metrics on a held-out set, not just the loss. We found that a 30% increase in training data diversity (adding examples across more ad categories) was more valuable than any hyperparameter tuning we did.</p>
+
+      <h2>The Decision Framework</h2>
+
+      <p>Before starting a fine-tuning project, answer these questions:</p>
+
+      <ol>
+        <li><strong>Can prompt engineering solve this?</strong> Try first. Seriously.</li>
+        <li><strong>How much labelled data do you have?</strong> LoRA fine-tuning can work with as few as 500-1000 high-quality examples for narrow tasks; complex tasks need 5K+. If you have fewer examples, consider synthetic data generation before fine-tuning.</li>
+        <li><strong>What's your inference latency budget?</strong> Merged LoRA + 4-bit quantization gets you within ~10% of the base model's throughput. If you need more, look at smaller base models.</li>
+        <li><strong>What's your GPU budget for training?</strong> QLoRA makes 7B models trainable on a single 24GB GPU. 13B models need 2×24GB. 70B models need 4×80GB even with QLoRA.</li>
+        <li><strong>How often will you need to update the model?</strong> Fine-tuning has a non-trivial iteration cycle. If your requirements change frequently, a RAG + prompting approach is likely more maintainable.</li>
+      </ol>
+
+      <p>Fine-tuning is powerful and increasingly accessible. It is also time-consuming, computationally non-trivial, and introduces a model artifact that requires maintenance. Do it when you have to, skip it when you don't, and measure everything.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="mailto:vasco.bailao@gmail.com">Discuss via email</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>

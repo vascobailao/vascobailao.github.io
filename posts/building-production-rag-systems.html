@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Building Production RAG Systems That Don't Hallucinate — Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5;
+      --text: #1a1a18; --muted: #6b6b67; --accent: #1a1a18;
+      --tag-bg: #f0f0ed; --nav-h: 64px;
+      --code-bg: #f4f4f1;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta span { display: flex; align-items: center; gap: 6px; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 24px; margin: 32px 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">RAG Engineering</p>
+      <h1 class="post-title">Building Production RAG Systems That Don't Hallucinate</h1>
+      <div class="post-meta">
+        <span>December 12, 2024</span>
+        <span class="dot"></span>
+        <span>18 min read</span>
+      </div>
+      <div class="tags">
+        <span class="tag">RAG</span>
+        <span class="tag">LangChain</span>
+        <span class="tag">Production ML</span>
+        <span class="tag">GPT-4</span>
+        <span class="tag">pgvector</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>Most RAG tutorials end at the demo. You embed some documents, run a similarity search, shove the results into a prompt, and it works — spectacularly, in a notebook, against a curated toy dataset. Then you try to ship it.</p>
+
+      <p>I spent the better part of 2024 building and shipping a production RAG system for audit workflows at a Big Four firm. The system ingested prior-year Entity Governance Assessment tables, current-year Procure-to-Pay PDFs, and had to answer auditor queries with ground-truthed citations — compressing a days-long manual control-comparison process into real-time dialogue. The stakes were high: wrong answers meant missed audit controls.</p>
+
+      <p>Here is what I learned about the gap between "RAG that works in a demo" and "RAG that works in production."</p>
+
+      <h2>The Core Problem: Retrieval Quality Determines Everything</h2>
+
+      <p>The LLM is not the hard part. Once you have good retrieval, even a mediocre prompt will produce acceptable answers. The inverse is not true. You can write the most carefully crafted system prompt in the world, but if the retrieved context is noisy, irrelevant, or incomplete, the model will either hallucinate or correctly say it doesn't know.</p>
+
+      <p>This sounds obvious in retrospect, but the entire RAG research community spent two years optimising prompt engineering when the real leverage was in retrieval. The failure mode I kept seeing in production was not "the LLM made something up" — it was "the retrieval returned the wrong chunk and the LLM faithfully summarised something unrelated."</p>
+
+      <h3>Chunking is not a solved problem</h3>
+
+      <p>The default advice is fixed-size chunking with some overlap. In practice, this is rarely optimal. Our audit documents had complex nested structures: tables with footnotes, control descriptions that referenced other sections, hierarchical numbering schemes. A fixed-size chunker shreds these structures in ways that make semantic search near-useless.</p>
+
+      <p>What actually worked:</p>
+
+      <ul>
+        <li><strong>Hierarchical chunking</strong>: We maintained document structure — section → subsection → paragraph — and embedded each level separately. At query time, we could retrieve at paragraph granularity but return the parent section for context.</li>
+        <li><strong>Semantic chunking</strong>: Using embedding similarity to find natural breaks rather than token counts. LangChain's <code>SemanticChunker</code> with a percentile threshold of 95 worked well for our documents.</li>
+        <li><strong>Metadata injection</strong>: Every chunk carried document type, section header, page number, fiscal year, and entity name. This paid off enormously in filtering.</li>
+      </ul>
+
+<pre><code>from langchain_experimental.text_splitter import SemanticChunker
+from langchain_openai import OpenAIEmbeddings
+
+splitter = SemanticChunker(
+    embeddings=OpenAIEmbeddings(model="text-embedding-3-large"),
+    breakpoint_threshold_type="percentile",
+    breakpoint_threshold_amount=95,
+)
+
+# Each chunk carries rich metadata
+docs = splitter.create_documents(
+    texts=[page_text],
+    metadatas=[{
+        "doc_type": "EGA",
+        "entity": entity_name,
+        "fiscal_year": year,
+        "section": section_title,
+        "page": page_num,
+        "control_id": extract_control_id(page_text),
+    }]
+)</code></pre>
+
+      <h2>Hybrid Search Is Not Optional</h2>
+
+      <p>Dense vector search (cosine similarity over embeddings) excels at semantic matching. It finds passages that mean the same thing even if phrased differently. But audit documents are full of specific identifiers — control numbers, account codes, vendor names, regulatory references — that pure semantic search handles poorly. You need exact string matching for these.</p>
+
+      <p>The solution is hybrid retrieval: combine a vector search with a BM25/keyword search, then fuse the results. We used pgvector for dense search and PostgreSQL's full-text search (<code>tsvector</code>) for sparse search, with Reciprocal Rank Fusion (RRF) to merge the ranked lists.</p>
+
+<pre><code>-- Dense retrieval
+SELECT chunk_id, content, metadata,
+       1 - (embedding &lt;=&gt; query_embedding) AS semantic_score
+FROM document_chunks
+WHERE metadata->>'fiscal_year' = '2024'
+ORDER BY embedding &lt;=&gt; query_embedding
+LIMIT 50;
+
+-- Sparse retrieval
+SELECT chunk_id, content, metadata,
+       ts_rank(search_vector, query) AS keyword_score
+FROM document_chunks
+WHERE search_vector @@ plainto_tsquery('english', :query_text)
+  AND metadata->>'fiscal_year' = '2024'
+ORDER BY keyword_score DESC
+LIMIT 50;
+
+-- RRF fusion in Python
+def reciprocal_rank_fusion(dense_results, sparse_results, k=60):
+    scores = {}
+    for rank, doc in enumerate(dense_results):
+        scores[doc.id] = scores.get(doc.id, 0) + 1 / (k + rank + 1)
+    for rank, doc in enumerate(sparse_results):
+        scores[doc.id] = scores.get(doc.id, 0) + 1 / (k + rank + 1)
+    return sorted(scores.items(), key=lambda x: x[1], reverse=True)</code></pre>
+
+      <p>In our benchmarks against ground-truth QA pairs, hybrid search improved recall@5 by 31% compared to dense-only retrieval. For audit use cases involving specific control IDs, the improvement was closer to 60%.</p>
+
+      <h2>HyDE: The Query Transformation That Actually Works</h2>
+
+      <p>One underused technique that made a measurable difference was Hypothetical Document Embeddings (HyDE). The idea: instead of embedding the raw query and searching for similar chunks, ask the LLM to generate a hypothetical answer to the question first, then embed that hypothetical answer and search against it.</p>
+
+      <p>The intuition is that a well-formed answer exists in the same embedding space as the document chunks that contain the actual answer, while a short question may not. An auditor asking "what changed in the vendor payment controls between 2023 and 2024?" produces a different embedding from the passage that actually answers it. A synthetic answer saying "In 2024, the vendor payment approval threshold was raised from €50k to €100k, and dual-control requirements were introduced for payments above €75k" will embed much closer to the relevant chunk.</p>
+
+<pre><code>from langchain.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+
+hyde_prompt = ChatPromptTemplate.from_messages([
+    ("system", """You are an expert auditor. Given the following question about
+audit controls, write a concise hypothetical passage that would directly answer it.
+Write the passage as if it appears in an audit control document.
+Do not add caveats — write a definitive, factual passage."""),
+    ("human", "{question}")
+])
+
+llm = ChatOpenAI(model="gpt-4o", temperature=0)
+
+def hyde_retrieve(question: str, retriever, k: int = 8):
+    # Generate hypothetical document
+    chain = hyde_prompt | llm
+    hypothetical_doc = chain.invoke({"question": question}).content
+
+    # Embed hypothetical doc and retrieve
+    results = retriever.get_relevant_documents(
+        hypothetical_doc, k=k
+    )
+    return results</code></pre>
+
+      <p>For our workload, HyDE improved precision@5 by roughly 18% on complex multi-hop questions. It does add latency and an extra LLM call, so we only activated it for queries that our classifier scored as "complex" (multi-entity, multi-period, or comparative).</p>
+
+      <h2>Re-ranking Is Cheap, Skip It and You'll Regret It</h2>
+
+      <p>Even with hybrid search and HyDE, the top-50 retrieved chunks are not all equally relevant. A cross-encoder re-ranker — a model that jointly encodes query and passage rather than computing them independently — significantly improves the final ranked order.</p>
+
+      <p>We used Cohere's Rerank API for this. The workflow: retrieve top-50 via hybrid search, re-rank to top-10, pass those 10 to the LLM.</p>
+
+<pre><code>import cohere
+
+co = cohere.Client(api_key)
+
+def rerank(query: str, candidates: list[dict], top_n: int = 10):
+    results = co.rerank(
+        query=query,
+        documents=[c["content"] for c in candidates],
+        top_n=top_n,
+        model="rerank-english-v3.0",
+        return_documents=True,
+    )
+
+    # Merge re-rank scores back to candidates with metadata
+    reranked = []
+    for r in results.results:
+        candidate = candidates[r.index].copy()
+        candidate["rerank_score"] = r.relevance_score
+        reranked.append(candidate)
+
+    return reranked</code></pre>
+
+      <p>The cost is minimal — Cohere's rerank API is orders of magnitude cheaper than an LLM call. The precision@3 improvement was 22% in our benchmark suite. This is one of the highest-ROI changes you can make to an existing RAG pipeline.</p>
+
+      <h2>Citation and Grounding: The Real Trust Problem</h2>
+
+      <p>For audit applications, it's not enough to return the right answer. The auditor needs to see exactly which source passage supports it. This is where most RAG systems fail silently — they return an answer and a list of retrieved documents, leaving the human to figure out which document actually says what.</p>
+
+      <p>We solved this by forcing the LLM to produce structured citations inline, then validating them programmatically.</p>
+
+<pre><code>SYSTEM_PROMPT = """You are an audit AI assistant. Answer the question using ONLY
+the provided context passages. For every factual claim in your answer, you MUST
+include an inline citation in the format [SOURCE:chunk_id].
+
+Rules:
+1. Never introduce information not present in the context.
+2. If the context does not contain enough information to answer, say exactly:
+   "The available documents do not contain sufficient information to answer this question."
+3. When comparing across years, cite both sources explicitly.
+4. Every sentence with a factual claim must have a citation.
+
+Context passages:
+{context}
+
+Question: {question}"""
+
+def validate_citations(answer: str, chunks: dict[str, str]) -> dict:
+    """Verify every cited chunk_id exists and extract cited text."""
+    import re
+    citations = re.findall(r'\[SOURCE:([^\]]+)\]', answer)
+
+    valid, invalid = [], []
+    for cid in citations:
+        if cid in chunks:
+            valid.append({"id": cid, "text": chunks[cid][:200]})
+        else:
+            invalid.append(cid)
+
+    return {
+        "answer": answer,
+        "valid_citations": valid,
+        "invalid_citations": invalid,  # hallucinated source IDs
+        "hallucination_detected": len(invalid) > 0
+    }</code></pre>
+
+      <div class="callout">
+        <p><strong>Key insight:</strong> Hallucinated citation IDs are a leading indicator of hallucinated content. When the model generates a citation ID that doesn't exist in your chunk store, it's almost always because it invented the underlying claim. Log these and route them to human review.</p>
+      </div>
+
+      <h2>Multi-turn Memory Without Context Window Explosion</h2>
+
+      <p>Audit sessions are inherently multi-turn. An auditor might ask about vendor controls, follow up with questions about specific exceptions, then ask how those compare to prior year. Naive multi-turn RAG — dump the entire conversation history into the context — runs into token limits and degrades retrieval quality because retrieval is optimised against the full history rather than the current question.</p>
+
+      <p>We used a combination of three techniques:</p>
+
+      <ol>
+        <li><strong>Query condensation</strong>: Before retrieval, condense the conversation history and current question into a standalone question that captures all necessary context. ("Given that we've been discussing vendor payment controls for FY2024 Acme Corp, what were the control gaps?" → "What were the vendor payment control gaps for Acme Corp in FY2024?")</li>
+        <li><strong>Selective memory</strong>: Rather than keeping full message history, maintain a structured summary of key facts established so far in the conversation. Update it after each turn.</li>
+        <li><strong>Retrieved context deduplication</strong>: Across multi-turn sessions, the same chunks tend to be retrieved repeatedly. Cache retrieved chunks per session and skip re-retrieval for chunks already in the context.</li>
+      </ol>
+
+      <h2>Evaluation: You Cannot Ship Without It</h2>
+
+      <p>This is the part nobody wants to hear: you need a benchmark. Without one, you are flying blind. You will think the system is working because it looks reasonable in demos, and you will find out it doesn't work when an auditor presents you with a case where it confidently cited the wrong fiscal year.</p>
+
+      <p>We built a golden QA dataset of 150 question-answer-source triples, manually verified by the audit team. Against this, we measured:</p>
+
+      <ul>
+        <li><strong>Recall@k</strong>: Does the correct chunk appear in the top-k retrieved results?</li>
+        <li><strong>Faithfulness</strong>: Are all claims in the answer supported by retrieved context? (LLM-as-judge with GPT-4o)</li>
+        <li><strong>Answer relevance</strong>: Does the answer actually address the question?</li>
+        <li><strong>Citation accuracy</strong>: Do cited chunk IDs exist and contain the claimed information?</li>
+      </ul>
+
+<pre><code>from ragas import evaluate
+from ragas.metrics import (
+    faithfulness,
+    answer_relevancy,
+    context_recall,
+    context_precision,
+)
+from datasets import Dataset
+
+# Your evaluation dataset
+eval_data = {
+    "question": questions,
+    "answer": model_answers,
+    "contexts": retrieved_contexts,  # list of lists
+    "ground_truth": ground_truth_answers,
+}
+
+dataset = Dataset.from_dict(eval_data)
+result = evaluate(
+    dataset,
+    metrics=[faithfulness, answer_relevancy, context_recall, context_precision]
+)
+print(result)</code></pre>
+
+      <p>Run this on every meaningful change to your pipeline — chunking strategy, embedding model, retrieval parameters, prompt. A change that looks like an improvement in demos can quietly degrade faithfulness by 5%. With a benchmark, you'll catch it before it ships.</p>
+
+      <h2>Production Observations After Three Months</h2>
+
+      <p>A few things that surprised me after the system went live:</p>
+
+      <p><strong>Embedding model quality matters more than you think.</strong> We initially used <code>text-embedding-ada-002</code> because it was the default. Switching to <code>text-embedding-3-large</code> improved recall@5 by 12% with no other changes. The marginal cost difference was irrelevant at our query volume.</p>
+
+      <p><strong>Metadata filtering is a superpower.</strong> We spent weeks optimising retrieval before realising that the most impactful change was pre-filtering by fiscal year and entity before vector search. This cut the search space dramatically and eliminated cross-entity contamination where an auditor asking about Company A would occasionally get chunks from Company B's documents.</p>
+
+      <p><strong>The failure mode shifts from hallucination to refusal.</strong> As you tighten faithfulness requirements, the model starts over-refusing — saying "the documents don't contain this information" when they do, just not in the top-k results. This is a retrieval problem masquerading as a generation problem. The fix is improving recall, not relaxing your faithfulness constraints.</p>
+
+      <p><strong>Token cost is dominated by context length, not query volume.</strong> Monitor context window utilisation per query. We found that 20% of queries were consuming 60% of the token budget because they triggered retrieval of many long chunks. Tighter chunking and a context compression step (using GPT-4o-mini to summarise less-relevant chunks) cut our cost by 35% without affecting answer quality.</p>
+
+      <h2>The Checklist</h2>
+
+      <p>If I were building a RAG system from scratch today, here is the order I would tackle things:</p>
+
+      <ol>
+        <li>Build your evaluation dataset first — even 50 QA pairs beats nothing</li>
+        <li>Invest heavily in chunking strategy; it determines your ceiling</li>
+        <li>Implement hybrid search (dense + sparse + RRF) from day one</li>
+        <li>Add metadata filtering before you add any retrieval complexity</li>
+        <li>Add a cross-encoder re-ranker before you add HyDE or other query transformations</li>
+        <li>Implement citation validation to catch hallucinations programmatically</li>
+        <li>Add HyDE or query condensation if your recall numbers justify the latency</li>
+        <li>Monitor faithfulness and context utilisation in production</li>
+      </ol>
+
+      <p>Most RAG systems that fail in production fail at step 2 or 3. They ship with the defaults, discover that the retrieval is noisy, add more complex prompting to compensate, and end up in an unmaintainable mess of compensatory hacks. Get the retrieval right, and the rest follows.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="mailto:vasco.bailao@gmail.com">Discuss via email</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Harari Is Wrong About the Useless Class (And Right About Everything Else) — Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; color: var(--text); }
+    .post-body blockquote { border-left: 3px solid var(--border); padding: 16px 24px; margin: 32px 0; background: var(--code-bg); border-radius: 0 4px 4px 0; }
+    .post-body blockquote p { margin-bottom: 8px; font-style: italic; color: var(--muted); font-size: 15px; }
+    .post-body blockquote p:last-child { margin-bottom: 0; }
+    .post-body blockquote cite { font-size: 12px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; color: var(--muted); font-style: normal; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">Opinion / The Future of Work</p>
+      <h1 class="post-title">Harari Is Wrong About the Useless Class (And Right About Everything Else)</h1>
+      <div class="post-meta">
+        <span>March 10, 2026</span>
+        <span class="dot"></span>
+        <span>14 min read</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Opinion</span>
+        <span class="tag">AI & Society</span>
+        <span class="tag">Future of Work</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>I have spent the last four years building the systems that Yuval Noah Harari warns humanity about. Agentic AI pipelines that compress hours of expert labour into seconds. Models fine-tuned to perform specialised cognitive work that previously required professional training. Retrieval systems that give any organisation the research capacity of a team ten times its size. I have shipped these systems into production, watched them work, and watched them fail. This gives me a particular vantage point on Harari's thesis.</p>
+
+      <p>His argument, articulated across <em>Homo Deus</em> and <em>21 Lessons for the 21st Century</em>, is that AI and automation will create a "useless class" — a large population whose economic contribution is eliminated by algorithms, who cannot retrain fast enough to keep pace, and who will consequently be maintained by some combination of universal basic income and digital entertainment while the cognitive elite capture the productivity gains. It is a thesis that gets repeated at Davos and in every future-of-work think piece, usually cited as if it is settled science.</p>
+
+      <p>It is not. And the parts of it that are right are not the parts that get amplified.</p>
+
+      <h2>What Harari Gets Right</h2>
+
+      <p>Let me start where the critique should start: with what is true.</p>
+
+      <p>Harari is right that the pace of change is structurally different this time. Previous waves of automation — agricultural mechanisation, industrial revolution, the computerisation of clerical work — displaced specific task bundles and created new roles in adjacent areas, on timescales that allowed generational adaptation. A farmer's son became a factory worker. A typist's daughter became a knowledge worker.</p>
+
+      <p>The current wave is different in two important ways. First, it attacks cognitive labour directly. Not just routine cognitive tasks — document processing, pattern matching, data entry — but tasks that we until recently classified as requiring "judgment": medical image reading, legal document review, financial analysis, code generation. These were meant to be the safe harbour. They are not.</p>
+
+      <p>Second, the timescale has compressed radically. The industrial revolution unfolded over generations. The automation of cognitive labour is unfolding within careers. A paralegal who spent a decade mastering legal research is now competing with tools that do it in seconds. The retraining interval — the time society allocates for displaced workers to acquire new skills — has not kept pace with the displacement rate. This structural mismatch is real, and Harari is right to take it seriously.</p>
+
+      <p>He is also right that the gains are distributing unequally. I have watched this firsthand. The organisations that deploy AI systems well — those with the technical capacity to implement them, the institutional knowledge to know what to ask for, the capital to experiment — are capturing enormous productivity gains. The ones without these advantages are not. This is not a temporary condition. It compounds.</p>
+
+      <blockquote>
+        <p>"In the twenty-first century we might witness the creation of a massive new unworking class: people devoid of any economic, political or even artistic value, who contribute nothing to the prosperity, power and glory of society."</p>
+        <cite>— Yuval Noah Harari, Homo Deus (2015)</cite>
+      </blockquote>
+
+      <p>The framing is extreme, but the underlying concern is legitimate. The distribution of economic power is becoming more, not less, concentrated around those who own or can effectively use these tools.</p>
+
+      <h2>Where the Thesis Breaks Down</h2>
+
+      <p>Here is where I part ways with Harari, and it is a fundamental disagreement rooted in what I observe when I build and deploy these systems every day.</p>
+
+      <h3>The error of static job definitions</h3>
+
+      <p>Harari's "useless class" argument implicitly assumes that jobs are fixed bundles of tasks, and that when a sufficient fraction of those tasks are automatable, the job is eliminated. This is not how work actually reorganises.</p>
+
+      <p>I have watched this pattern play out repeatedly. Before I shipped the audit RAG system at PwC, an auditor's day involved substantial time on control comparison — manually cross-referencing prior-year and current-year documents to identify what changed. The system I built can do this in real time. Did the auditor become redundant?</p>
+
+      <p>No. The auditor's job changed. The time formerly spent on mechanical comparison is now spent on the interpretation of the delta — asking <em>why</em> the control changed, whether the change is appropriate, what its downstream implications are. The fraction of their time spent on judgment increased. The fraction spent on lookup decreased. The value of the role, to both the organisation and the individual, arguably went up, not down.</p>
+
+      <p>This is not an isolated case. It is a consistent pattern. When you eliminate the tedious components of expert work, you do not eliminate the expert — you concentrate their cognitive output on the parts that require their expertise. This might feel like a good outcome, and in many cases it is. But Harari's framing as elimination misses it entirely.</p>
+
+      <h3>The underestimation of AI's actual limitations</h3>
+
+      <p>Harari writes about AI with the confidence of someone who has not spent time debugging production systems at 2am because an agentic pipeline got stuck in a retrieval loop and started generating confident hallucinations about audit controls that did not exist.</p>
+
+      <p>Current AI systems — including the most capable frontier models — have specific, well-defined failure modes that are not theoretical concerns but daily operational realities. They hallucinate, they fail to generalise outside their training distribution, they are brittle to surface-level input changes, they lack persistent memory, they cannot reliably self-assess their uncertainty, and they are extraordinarily bad at knowing what they don't know.</p>
+
+      <p>These are not minor engineering problems to be solved in the next iteration. Some of them reflect fundamental limitations of the current paradigm. The result is that deploying AI in contexts where errors have real consequences — medicine, law, finance, safety-critical infrastructure — requires substantial human oversight, not to catch the occasional error, but to catch a non-trivial and currently unpredictable rate of errors.</p>
+
+      <p>The "useless class" thesis implicitly assumes that AI will reach sufficient reliability to replace human judgment. For specific, narrow, well-defined tasks, this is already true. For the broad exercise of professional judgment in complex, open-ended, consequential domains, it is not true today, and the path to it being true is longer and harder than the popular discourse acknowledges.</p>
+
+      <h3>The conflation of task automation with role elimination</h3>
+
+      <p>This is perhaps the most consequential error in Harari's framing. He treats "this task can be automated" as equivalent to "this person is no longer needed." The evidence does not support this equivalence.</p>
+
+      <p>The economist David Autor, whose empirical work on labour market polarisation is among the most rigorous in this field, has documented that automation of specific tasks tends to increase demand for complementary human skills in the same occupation — not eliminate the occupation. ATMs automated cash dispensing. The number of bank tellers increased, because the lower cost of running a branch increased demand for the relationship-intensive services that tellers provide.</p>
+
+      <p>Harari is aware of this historical pattern but dismisses it on the grounds that this time is different — that AI, unlike previous automation, can substitute for uniquely human skills rather than merely complementing them. This may be directionally correct, but the magnitude and the timeline remain deeply uncertain. Projecting current capabilities forward on an exponential curve and calling the landing point "2040" or "2050" is not analysis. It is extrapolation dressed as analysis.</p>
+
+      <h2>The Problem With the Useless Class Narrative</h2>
+
+      <p>The most damaging aspect of Harari's thesis is not its inaccuracies. It is what the thesis does to people who internalise it.</p>
+
+      <p>I have sat in meetings where professionals — experienced, talented, knowledgeable people — have expressed genuine existential anxiety about their relevance. Not because they have encountered AI and found it superior to their judgment, but because they have read Harari, or attended conferences where his ideas were cited, and concluded that their economic contribution is pre-emptively obsolete.</p>
+
+      <p>This is precisely the wrong cognitive frame. The professionals who are navigating this transition successfully are not the ones who have decided the game is over. They are the ones who have understood that the game has changed, and have updated their strategy accordingly. They have learned which of their tasks AI does better and offloaded those. They have doubled down on the judgment, relationship, contextual, and accountability-bearing aspects of their work — the parts that AI cannot do reliably, and the parts that organisations and clients actually pay for.</p>
+
+      <p>The "useless class" framing encourages passivity and despair in precisely the people who have the most capacity to adapt. It serves the interests of those who benefit from a narrative where AI is an unstoppable force displacing human labour — because that narrative forecloses the political and institutional responses that would constrain the conditions under which that displacement happens.</p>
+
+      <h2>What Is Actually Happening</h2>
+
+      <p>From where I sit — inside the organisations building and deploying these systems — the picture is less apocalyptic and more complicated than either the techno-optimists or Harari describe.</p>
+
+      <p>The productivity gains from AI are real but unevenly distributed within organisations. The people who can tell an AI system what to do, evaluate its output critically, identify its failure modes, and integrate it into institutional workflows are becoming more valuable. The people who cannot, or who are not given the opportunity to learn, are facing genuine economic pressure. This is a problem of access, institutional investment in training, and labour market policy — not an inevitable consequence of technology.</p>
+
+      <p>The tasks that are being displaced are disproportionately the ones that were least engaging for the people doing them — mechanical document processing, routine research compilation, formulaic communication. There is a genuine question about whether the displacement of these tasks represents a loss or a liberation, and the answer depends almost entirely on what replaces them and who captures the value.</p>
+
+      <p>That question — who captures the value — is the right one. Not "will AI create a useless class?" but "who benefits from the productivity gains, and who bears the costs of transition?" These are political and institutional questions, not technological ones. And they are questions that Harari's framing, for all its rhetorical force, ultimately obscures rather than illuminates.</p>
+
+      <h2>The Honest Summary</h2>
+
+      <p>Harari is right that the change is real, fast, and unevenly distributed. He is right that the gains are concentrating. He is right that the pace of adaptation required of individuals and institutions is unprecedented.</p>
+
+      <p>He is wrong that the outcome is predetermined. He is wrong to assume that task automation cleanly implies role elimination. He is wrong about the current and near-term capabilities of AI in high-judgment domains. And he is wrong — or at least recklessly incomplete — when he frames a political and distributional problem as a technological inevitability.</p>
+
+      <p>The nature of work is changing, faster than is comfortable and slower than the most dramatic predictions suggest. The people who will navigate it best are the ones who understand specifically what AI can and cannot do — not abstractly, but in practice — and who position themselves at the intersection of technical capability and the contextual, relational, accountable judgment that AI cannot reliably provide.</p>
+
+      <p>Building AI systems that work in production has made me less afraid of AI than Harari would have me be, and more concerned about the institutional and political failures that will determine whether its gains are shared. The useless class is not a technological destiny. It is a choice — one we are making slowly, in budget decisions and policy inaction and the way organisations decide who gets access to these tools and who does not.</p>
+
+      <p>That is a harder problem to narrate than "the algorithm is coming for your job." But it is the real one.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="mailto:vasco.bailao@gmail.com">Discuss via email</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>

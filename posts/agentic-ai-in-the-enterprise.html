@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agentic AI in the Enterprise: Lessons from the Field — Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 24px; margin: 32px 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">Agentic AI</p>
+      <h1 class="post-title">Agentic AI in the Enterprise: Lessons from the Field</h1>
+      <div class="post-meta">
+        <span>February 4, 2026</span>
+        <span class="dot"></span>
+        <span>20 min read</span>
+      </div>
+      <div class="tags">
+        <span class="tag">LangGraph</span>
+        <span class="tag">Agents</span>
+        <span class="tag">AWS Bedrock</span>
+        <span class="tag">Production AI</span>
+        <span class="tag">Architecture</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>Everyone building AI systems today is somewhere on the journey from "prompt + completion" to "agent that autonomously uses tools and coordinates sub-tasks." The research community jumped to complex multi-agent systems almost immediately. Enterprise practitioners are being more cautious — and for good reason.</p>
+
+      <p>I have been building agentic RAG systems in production for the past year, most recently at SAP where we are shipping a retrieval pipeline with 8+ agent functions across AWS Bedrock, Azure OpenAI, and Google Generative AI backends. Before that, at PwC, where the agent had to reliably produce audit-defensible citations on every query. This is what I have learned about the gap between agentic AI that demos well and agentic AI that survives contact with enterprise requirements.</p>
+
+      <h2>What "Agentic" Actually Means in Practice</h2>
+
+      <p>The word "agent" gets applied to everything from a simple tool-calling loop to fully autonomous multi-agent systems. Let me be precise about what I mean.</p>
+
+      <p>A system is agentic when it can:</p>
+
+      <ul>
+        <li>Select which tools to call, in what order, based on intermediate results</li>
+        <li>Modify its retrieval strategy based on initial results</li>
+        <li>Determine when it has enough information to answer vs. when to search further</li>
+        <li>Handle failure of individual tools without failing the overall task</li>
+      </ul>
+
+      <p>This is qualitatively different from a fixed pipeline that always calls tools A → B → C. The key property is <em>capability-based planning</em>: the agent looks at its available tools, the current state of its knowledge, and the user's intent, and decides how to proceed.</p>
+
+      <p>The power of this approach is real. A static RAG pipeline that always does semantic search → rerank → generate will fail on queries that require metadata filtering, or attachment processing, or self-query reformulation. An agent can select the right capability for the query type.</p>
+
+      <p>The danger is equally real. An agent that can choose its own tools can make bad choices. It can call expensive tools unnecessarily, get stuck in loops, or fail silently in ways that are hard to debug.</p>
+
+      <h2>LangGraph: Why It's Worth the Learning Curve</h2>
+
+      <p>We evaluated several orchestration frameworks. LangGraph won for a specific reason: it makes state explicit.</p>
+
+      <p>In a LangGraph graph, you define your state schema upfront. Every node in the graph reads from and writes to this shared state. This means you can inspect exactly what an agent "knows" at any point in execution. For enterprise use cases where you need auditability, this is essential.</p>
+
+<pre><code>from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
+from typing import TypedDict, Annotated, Sequence
+from langchain_core.messages import BaseMessage
+import operator
+
+# Explicit state schema — no hidden state
+class AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], operator.add]
+    query: str
+    reformulated_query: str | None
+    retrieved_chunks: list[dict]
+    retrieval_strategy: str  # which tool was used
+    reranked_chunks: list[dict]
+    citations: list[dict]
+    final_answer: str | None
+    iteration_count: int
+    sufficient_context: bool
+
+def should_continue(state: AgentState) -> str:
+    """Conditional edge: decide next step based on state."""
+    if state["sufficient_context"]:
+        return "generate"
+    if state["iteration_count"] >= 3:
+        return "generate_with_disclaimer"
+    if not state["retrieved_chunks"]:
+        return "reformulate"
+    return "rerank"
+
+def assess_retrieval_quality(state: AgentState) -> AgentState:
+    """Determine if retrieved context is sufficient to answer."""
+    # LLM-as-judge: does the context contain enough to answer?
+    chunks_text = "\n\n".join(c["content"] for c in state["reranked_chunks"][:5])
+    prompt = f"""Query: {state['query']}
+
+Context retrieved:
+{chunks_text}
+
+Is this context sufficient to answer the query with specific, cited facts?
+Respond with JSON: {{"sufficient": true/false, "reason": "..."}}"""
+
+    response = assessment_llm.invoke(prompt)
+    result = parse_json(response.content)
+
+    return {
+        **state,
+        "sufficient_context": result["sufficient"],
+    }
+
+# Build the graph
+graph = StateGraph(AgentState)
+graph.add_node("route_query", route_query_node)
+graph.add_node("semantic_search", semantic_search_node)
+graph.add_node("metadata_filter_search", metadata_search_node)
+graph.add_node("self_query_search", self_query_node)
+graph.add_node("attachment_search", attachment_search_node)
+graph.add_node("rerank", rerank_node)
+graph.add_node("assess_quality", assess_retrieval_quality)
+graph.add_node("reformulate", reformulate_query_node)
+graph.add_node("generate", generate_answer_node)
+
+graph.set_entry_point("route_query")
+graph.add_conditional_edges("assess_quality", should_continue, {
+    "generate": "generate",
+    "generate_with_disclaimer": "generate",
+    "reformulate": "reformulate",
+    "rerank": "rerank",
+})
+
+# Compile with checkpointing for observability
+memory = MemorySaver()
+compiled_graph = graph.compile(checkpointer=memory)</code></pre>
+
+      <h2>Capability-Based Routing: The Core Architectural Decision</h2>
+
+      <p>The most important design decision in an agentic RAG system is how queries are routed to different retrieval capabilities. You have two options: let the LLM decide (flexible but unpredictable), or use a classifier (predictable but less flexible).</p>
+
+      <p>We use a classifier for first-pass routing, with LLM fallback for ambiguous cases. This gives us the predictability and auditability that enterprise clients require, while preserving flexibility for complex queries.</p>
+
+<pre><code>from sklearn.linear_model import LogisticRegression
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+RETRIEVAL_STRATEGIES = [
+    "semantic_search",      # Default: dense vector search
+    "metadata_filter",      # Specific entity/date/type filtering
+    "self_query",           # LLM extracts structured filters from query
+    "attachment_search",    # Binary content (images, PDFs embedded in docs)
+    "hybrid_search",        # Dense + sparse for keyword-heavy queries
+]
+
+class QueryRouter:
+    def __init__(self, model_path: str):
+        self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
+        self.classifier = LogisticRegression(C=1.0, multi_class='multinomial')
+        # Train on labelled query examples in practice
+
+    def route(self, query: str, threshold: float = 0.6) -> dict:
+        embedding = self.encoder.encode([query])
+        proba = self.classifier.predict_proba(embedding)[0]
+        best_idx = np.argmax(proba)
+        confidence = proba[best_idx]
+
+        if confidence >= threshold:
+            strategy = RETRIEVAL_STRATEGIES[best_idx]
+            return {"strategy": strategy, "confidence": float(confidence)}
+        else:
+            # Fall back to LLM routing for ambiguous queries
+            return self._llm_route(query)
+
+    def _llm_route(self, query: str) -> dict:
+        prompt = f"""Classify this query into ONE retrieval strategy.
+
+Query: {query}
+
+Strategies:
+- semantic_search: General question needing semantic understanding
+- metadata_filter: Specific entity, date range, or document type needed
+- self_query: Query mentions specific filters (company names, years, control IDs)
+- attachment_search: Looking for information in images or embedded files
+- hybrid_search: Contains specific keywords, IDs, or codes
+
+Respond with JSON: {{"strategy": "...", "reason": "..."}}"""
+
+        response = routing_llm.invoke(prompt)
+        result = parse_json(response.content)
+        return {"strategy": result["strategy"], "confidence": 0.5, "reason": result["reason"]}</code></pre>
+
+      <h2>The Failure Modes You Will Encounter</h2>
+
+      <h3>1. The infinite loop problem</h3>
+
+      <p>An agent that can reformulate queries and retry will, under certain conditions, loop forever. The reformulation produces a slightly different query, which retrieves slightly different (but still insufficient) context, which triggers another reformulation. We solve this with strict iteration limits and a "generate with disclaimer" path that fires when the agent has exhausted its attempts:</p>
+
+<pre><code>def generate_with_disclaimer_node(state: AgentState) -> AgentState:
+    """Generate an honest response when context is insufficient."""
+    if not state["retrieved_chunks"]:
+        answer = ("I was unable to find relevant documents to answer this question. "
+                  "The query may fall outside the scope of the indexed knowledge base, "
+                  "or may require information not present in the available documents.")
+    else:
+        # Generate from partial context with explicit uncertainty
+        answer = generate_with_explicit_uncertainty(
+            state["query"],
+            state["reranked_chunks"],
+        )
+    return {**state, "final_answer": answer}</code></pre>
+
+      <h3>2. Tool cost runaway</h3>
+
+      <p>An unconstrained agent can call expensive tools repeatedly. We track token usage and tool call counts per request and enforce hard limits:</p>
+
+<pre><code>class CostGuard:
+    def __init__(self, max_tokens: int = 50_000, max_tool_calls: int = 12):
+        self.max_tokens = max_tokens
+        self.max_tool_calls = max_tool_calls
+        self.token_count = 0
+        self.tool_call_count = 0
+
+    def check_and_increment(self, tokens_used: int, tool_name: str) -> None:
+        self.token_count += tokens_used
+        self.tool_call_count += 1
+
+        if self.token_count > self.max_tokens:
+            raise BudgetExceededError(
+                f"Token budget exceeded: {self.token_count} > {self.max_tokens}"
+            )
+        if self.tool_call_count > self.max_tool_calls:
+            raise BudgetExceededError(
+                f"Tool call limit exceeded: {self.tool_call_count} > {self.max_tool_calls}"
+            )</code></pre>
+
+      <h3>3. Silent partial failure</h3>
+
+      <p>One tool in your agent's arsenal fails — say, the attachment search times out. The agent may continue with the remaining tools and produce an answer that is technically correct for the documents it could access, but missing the information in the attachment. The user has no way of knowing this. We handle this by surfacing tool-level success/failure in the response metadata and, for high-stakes queries, requiring explicit coverage confirmation.</p>
+
+      <h2>Multi-Backend Reliability: Bedrock + Azure + Google</h2>
+
+      <p>Running against multiple LLM backends adds significant complexity but is increasingly a hard requirement for enterprise clients who want to avoid single-vendor lock-in or who have data residency requirements that prohibit sending data to certain cloud regions.</p>
+
+      <p>We implemented a backend abstraction layer with automatic failover:</p>
+
+<pre><code>from enum import Enum
+from typing import Protocol
+import asyncio
+
+class LLMBackend(Protocol):
+    async def complete(self, messages: list[dict], **kwargs) -> str: ...
+
+class BackendRouter:
+    def __init__(self, backends: list[tuple[str, LLMBackend, float]]):
+        # (name, backend, priority_weight)
+        self.backends = sorted(backends, key=lambda x: x[2], reverse=True)
+        self.failure_counts = {name: 0 for name, _, _ in backends}
+        self.circuit_open = {name: False for name, _, _ in backends}
+
+    async def complete(self, messages: list, **kwargs) -> str:
+        for name, backend, _ in self.backends:
+            if self.circuit_open[name]:
+                continue
+            try:
+                result = await asyncio.wait_for(
+                    backend.complete(messages, **kwargs),
+                    timeout=30.0
+                )
+                self.failure_counts[name] = 0  # Reset on success
+                return result
+            except asyncio.TimeoutError:
+                self.failure_counts[name] += 1
+                if self.failure_counts[name] >= 3:
+                    self.circuit_open[name] = True
+                    asyncio.create_task(self._reset_circuit(name, delay=60))
+            except Exception as e:
+                self.failure_counts[name] += 1
+                continue
+
+        raise AllBackendsFailedError("All LLM backends failed or circuit-broken")
+
+    async def _reset_circuit(self, name: str, delay: int):
+        await asyncio.sleep(delay)
+        self.circuit_open[name] = False
+        self.failure_counts[name] = 0</code></pre>
+
+      <h2>Observability Is Not Optional</h2>
+
+      <p>An agent that makes multiple tool calls across multiple backends, with conditional branching based on intermediate results, is a debugging nightmare without structured logging. Every node in our LangGraph graph emits a structured event:</p>
+
+<pre><code>import structlog
+from dataclasses import dataclass, asdict
+from datetime import datetime
+
+log = structlog.get_logger()
+
+@dataclass
+class AgentEvent:
+    session_id: str
+    request_id: str
+    timestamp: str
+    node_name: str
+    input_summary: dict
+    output_summary: dict
+    duration_ms: float
+    tokens_used: int
+    backend_used: str | None = None
+    error: str | None = None
+
+def instrument_node(node_fn):
+    """Decorator to add structured logging to any LangGraph node."""
+    async def wrapper(state: AgentState) -> AgentState:
+        start = datetime.utcnow()
+        try:
+            result = await node_fn(state)
+            event = AgentEvent(
+                session_id=state.get("session_id", "unknown"),
+                request_id=state.get("request_id", "unknown"),
+                timestamp=start.isoformat(),
+                node_name=node_fn.__name__,
+                input_summary={"query": state.get("query", "")[:100]},
+                output_summary=summarise_output(result),
+                duration_ms=(datetime.utcnow() - start).total_seconds() * 1000,
+                tokens_used=result.get("tokens_used", 0),
+                backend_used=result.get("backend_used"),
+            )
+            log.info("agent_node_complete", **asdict(event))
+            return result
+        except Exception as e:
+            log.error("agent_node_failed", node=node_fn.__name__, error=str(e))
+            raise
+    return wrapper</code></pre>
+
+      <p>This feeds into a dashboard that shows, per request: which nodes executed, in what order, how long each took, which backend was used, and where failures occurred. Without this, debugging a production incident in a multi-node agent is hours of log trawling.</p>
+
+      <h2>The Honest Assessment of What Agents Can't Do Yet</h2>
+
+      <p>After a year of building this, here is what I believe agents currently cannot do reliably in enterprise production:</p>
+
+      <p><strong>Complex multi-hop reasoning over many documents.</strong> An agent can retrieve relevant chunks and synthesise them into an answer. It cannot reliably traverse a chain of 5+ inference steps across 20+ documents and produce a verifiably correct conclusion. The error rate is too high for anything with real consequences.</p>
+
+      <p><strong>Autonomous action in high-stakes workflows.</strong> Write access to production systems, financial transactions, sending communications on behalf of users — these require human-in-the-loop at the current capability level. The failure modes are too costly.</p>
+
+      <p><strong>Self-evaluation of its own uncertainty.</strong> Models are poorly calibrated about when they don't know something. They will often generate confident-sounding answers in regions of genuine uncertainty. This is the core reason you need external evaluation, citation validation, and "I don't know" guardrails rather than relying on the model to flag its own uncertainty.</p>
+
+      <p>What agents <em>can</em> do reliably — retrieve and synthesise information from large document corpora, select among different retrieval strategies, maintain context across multi-turn conversations, process multiple modalities — is already valuable enough to justify the engineering effort. Build for what works, have clear guardrails for what doesn't, and be honest with your stakeholders about where the boundaries are.</p>
+
+      <h2>What to Build First</h2>
+
+      <p>If you are starting an agentic RAG project today, here is my recommended ordering:</p>
+
+      <ol>
+        <li>Ship a simple, non-agentic RAG pipeline first. Measure its failure modes. The patterns you find will tell you which agent capabilities to prioritise.</li>
+        <li>Add capability-based routing before you add any other agentic behaviour. The return on query classification is enormous.</li>
+        <li>Add iteration limits, cost guards, and observability before you add more tools. Infrastructure before features.</li>
+        <li>Add tools incrementally, with evaluation benchmarks for each. A new tool that improves answers for query type X and degrades them for type Y is not a net win.</li>
+        <li>Add multi-turn memory last. It significantly increases system complexity for marginal quality improvement in most use cases.</li>
+      </ol>
+
+      <p>The hype around agents will continue to outpace the reality for another year or two. Build what works, measure everything, and resist the pull toward complexity for its own sake.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="mailto:vasco.bailao@gmail.com">Discuss via email</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>
