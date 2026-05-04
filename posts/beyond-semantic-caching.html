@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Beyond Semantic Caching: A Hybrid Approach to LLM Inference Efficiency — Vasco Fernandes</title>
+  <title>Beyond Semantic Caching: A Hybrid Approach to LLM Inference Efficiency | Vasco Fernandes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -130,7 +130,7 @@ print(f"queries={len(queries):,}  dim={embeddings.shape[1]}  "
       </div>
 
       <div class="nb-cell">
-        <div class="nb-label"><span class="nb-tag">In [2]</span><span>threshold sweep — semantic cache only</span></div>
+        <div class="nb-label"><span class="nb-tag">In [2]</span><span>threshold sweep, semantic cache only</span></div>
 <pre><code>def sweep(thresholds):
     rows = []
     for t in thresholds:
@@ -160,7 +160,7 @@ sweep([0.80, 0.85, 0.88, 0.90, 0.92, 0.95, 0.97]).round(3)
 6       0.97     0.118      0.991   0.391                0.009</div>
       </div>
 
-      <p>Read the table the way an SRE would: at the threshold where false positives drop below 2% (0.95), recall is 57% — meaning we are losing two-fifths of the answers we could have served from cache. At the threshold where hit rate looks attractive (0.85, 49%), nearly one in five served answers is wrong. There is no row in this table that I would deploy.</p>
+      <p>Read the table the way an SRE would: at the threshold where false positives drop below 2% (0.95), recall is 57%, meaning we are losing two-fifths of the answers we could have served from cache. At the threshold where hit rate looks attractive (0.85, 49%), nearly one in five served answers is wrong. There is no row in this table that I would deploy.</p>
 
       <p>The fix is not to find a magic threshold. It is to stop pretending a single similarity score is a reliable equivalence signal.</p>
 
@@ -169,16 +169,16 @@ sweep([0.80, 0.85, 0.88, 0.90, 0.92, 0.95, 0.97]).round(3)
       <p>The architecture I converged on after several iterations is a five-stage waterfall. Each stage either serves a response or hands the query down to the next stage. The point is to spend the minimum compute consistent with a correct, fresh-feeling answer.</p>
 
       <ol>
-        <li><strong>Exact-match cache</strong> — normalised string hash, microseconds, zero false positives.</li>
-        <li><strong>Embedding cache + tuned threshold</strong> — fast ANN lookup, used only as a candidate generator.</li>
-        <li><strong>Lightweight verifier</strong> — a small cross-encoder that decides whether the candidate truly answers the new query.</li>
-        <li><strong>Prompt / KV cache</strong> — when we must call the LLM, reuse the prefix tokens that don't change between requests.</li>
-        <li><strong>Rewrite step</strong> — when we serve a cached answer, lightly paraphrase it so the user doesn't notice repetition across sessions.</li>
+        <li><strong>Exact-match cache</strong>: normalised string hash, microseconds, zero false positives.</li>
+        <li><strong>Embedding cache + tuned threshold</strong>: fast ANN lookup, used only as a candidate generator.</li>
+        <li><strong>Lightweight verifier</strong>: a small cross-encoder that decides whether the candidate truly answers the new query.</li>
+        <li><strong>Prompt / KV cache</strong>: when we must call the LLM, reuse the prefix tokens that don't change between requests.</li>
+        <li><strong>Rewrite step</strong>: when we serve a cached answer, lightly paraphrase it so the user doesn't notice repetition across sessions.</li>
       </ol>
 
       <p>Each stage is independently measurable and independently swappable. The verifier is what makes the embedding stage safe; the rewrite step is what makes the cache <em>feel</em> good rather than uncanny.</p>
 
-      <h3>Stage 1 — Exact match</h3>
+      <h3>Stage 1: Exact match</h3>
 
       <p>The cheapest possible cache. Normalise whitespace and casing, strip a small stop-prefix list ("hi", "hello", "could you please"), hash, look up in Redis. This catches the long tail of users copy-pasting the same question and the surprisingly large fraction of queries that are textually identical after normalisation.</p>
 
@@ -208,7 +208,7 @@ print(f"exact-match coverage: {exact_hits / len(queries):.1%}  "
 
       <p>22% of traffic served from a hash table is real money. It costs nothing and never errs. Anyone shipping a semantic cache without an exact-match layer in front of it is leaving free wins on the floor.</p>
 
-      <h3>Stage 2 — Embedding candidate generator (not a cache)</h3>
+      <h3>Stage 2: Embedding candidate generator (not a cache)</h3>
 
       <p>Here is the conceptual shift. The embedding lookup is no longer trying to <em>decide</em> whether two queries are equivalent. It is producing a single high-recall candidate that the verifier will adjudicate. That changes the threshold-tuning objective: we want the lowest threshold that keeps recall ≥ 95% on a held-out set, not the highest threshold we can stomach.</p>
 
@@ -236,12 +236,12 @@ print(f"chosen candidate-generation threshold: {chosen}  recall={recall_at(chose
 
       <p>At 0.83 we recall 96% of true equivalences. The precision is awful (we'll measure it shortly), but precision is the verifier's job.</p>
 
-      <h3>Stage 3 — Lightweight verifier</h3>
+      <h3>Stage 3: Lightweight verifier</h3>
 
-      <p>The verifier is a 22M-parameter cross-encoder fine-tuned on 12k labelled pairs. It looks at <em>(new query, cached query, cached answer)</em> and outputs a single probability that the cached answer correctly answers the new query. Note the third input — most semantic-caching implementations forget that two questions can be equivalent in the abstract but answered differently given session context, and the cached <em>answer</em> is the thing we're actually about to serve.</p>
+      <p>The verifier is a 22M-parameter cross-encoder fine-tuned on 12k labelled pairs. It looks at <em>(new query, cached query, cached answer)</em> and outputs a single probability that the cached answer correctly answers the new query. Note the third input: most semantic-caching implementations forget that two questions can be equivalent in the abstract but answered differently given session context, and the cached <em>answer</em> is the thing we're actually about to serve.</p>
 
       <div class="nb-cell">
-        <div class="nb-label"><span class="nb-tag">In [5]</span><span>verifier — train and evaluate</span></div>
+        <div class="nb-label"><span class="nb-tag">In [5]</span><span>verifier: train and evaluate</span></div>
 <pre><code>from sentence_transformers import CrossEncoder
 
 verifier = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2",
@@ -273,12 +273,12 @@ avg latency       : 8.4 ms / pair</div>
 
       <p>98.7% precision at 8.4ms. That is the unlock. The verifier is small enough to run on CPU at a few thousand QPS per core, and it converts the embedding stage from "high-recall but unsafe" to "high-recall <em>and</em> safe to ship".</p>
 
-      <h3>Stage 4 — Prompt and KV caching at the inference layer</h3>
+      <h3>Stage 4: Prompt and KV caching at the inference layer</h3>
 
       <p>For the queries that survive stages 1–3 and hit the LLM, there is still a large amount of redundant computation. The system prompt, tool definitions, and few-shot examples are identical across requests. If you are running self-hosted inference, vLLM's <code>--enable-prefix-caching</code> stores the KV tensors for shared prefixes; if you are calling Anthropic or OpenAI, prompt caching achieves the same thing through the API. Either way, you stop paying for prefix tokens you have already processed.</p>
 
       <div class="nb-cell">
-        <div class="nb-label"><span class="nb-tag">In [6]</span><span>vLLM prefix cache — measurement</span></div>
+        <div class="nb-label"><span class="nb-tag">In [6]</span><span>vLLM prefix cache: measurement</span></div>
 <pre><code>from vllm import LLM, SamplingParams
 
 llm = LLM(model="meta-llama/Llama-3.1-8B-Instruct",
@@ -306,11 +306,11 @@ print(f"steady-state: {warm2:6.1f} ms")
 steady-state:  208.9 ms</div>
       </div>
 
-      <p>3.5x speedup on the first warm call, holding around 3.5–3.7x in steady state. The math is mechanical: 4,000 prefix tokens that previously went through the prefill pass on every request are now read straight from the KV cache. This is pure win — there is no quality tradeoff.</p>
+      <p>3.5x speedup on the first warm call, holding around 3.5–3.7x in steady state. The math is mechanical: 4,000 prefix tokens that previously went through the prefill pass on every request are now read straight from the KV cache. This is pure win. There is no quality tradeoff.</p>
 
-      <h3>Stage 5 — Rewrite</h3>
+      <h3>Stage 5: Rewrite</h3>
 
-      <p>This is the stage that surprises people. If you serve a verbatim cached answer to a user whose question is a paraphrase, the response can feel uncanny — especially in support contexts where prior interactions are visible in the same thread. A 30-token paraphrase pass on the cached answer (using a 1B-parameter model) restores the conversational feel at negligible cost.</p>
+      <p>This is the stage that surprises people. If you serve a verbatim cached answer to a user whose question is a paraphrase, the response can feel uncanny, especially in support contexts where prior interactions are visible in the same thread. A 30-token paraphrase pass on the cached answer (using a 1B-parameter model) restores the conversational feel at negligible cost.</p>
 
       <div class="nb-cell">
         <div class="nb-label"><span class="nb-tag">In [7]</span><span>rewrite step</span></div>
@@ -336,7 +336,7 @@ sample_a = ("Refunds are issued to the original payment method and typically "
 print(rewrite(sample_q, sample_a))
 </code></pre>
         <div class="nb-output">Refunds go back to the card you originally paid with, and they usually
-land in your account within 5 to 7 business days — the exact timing
+land in your account within 5 to 7 business days. The exact timing
 depends on your bank.</div>
       </div>
 
@@ -419,17 +419,17 @@ for k, v in buckets.items():
         </tbody>
       </table>
 
-      <p>58.8% reduction in total compute. p50 latency drops by an order of magnitude because half the traffic short-circuits to a cache hit; p95 still benefits substantially from the prefix cache on the misses. The wrong-answer rate ticks up by 0.2 percentage points, which is the verifier's residual false-positive rate flowing through to served answers — a deliberate, measured tradeoff.</p>
+      <p>58.8% reduction in total compute. p50 latency drops by an order of magnitude because half the traffic short-circuits to a cache hit; p95 still benefits substantially from the prefix cache on the misses. The wrong-answer rate ticks up by 0.2 percentage points, which is the verifier's residual false-positive rate flowing through to served answers: a deliberate, measured tradeoff.</p>
 
       <div class="callout">
-        <p><strong>The conceptual point:</strong> we are not caching the model's final output and praying it applies to the next user. We are caching <em>computations</em> — prefill activations, candidate retrievals, verifier decisions — and recomposing them per request. Final-output caching has a hit-rate ceiling and a quality floor. Computation caching scales with prefix overlap and degrades gracefully.</p>
+        <p><strong>The conceptual point:</strong> we are not caching the model's final output and praying it applies to the next user. We are caching <em>computations</em> (prefill activations, candidate retrievals, verifier decisions) and recomposing them per request. Final-output caching has a hit-rate ceiling and a quality floor. Computation caching scales with prefix overlap and degrades gracefully.</p>
       </div>
 
       <h2>What Breaks This</h2>
 
       <p>I want to be honest about where the hybrid stack stops working.</p>
 
-      <p><strong>High personalisation.</strong> If every answer needs to reference user-specific account state, the verifier will (correctly) reject most embedding candidates because the cached answer doesn't apply to the new user. You're left with the prefix cache only, which is still worth doing — Anthropic's prompt-caching API alone routinely cuts costs by 40–60% on long-context agentic workloads — but the embedding stage adds little.</p>
+      <p><strong>High personalisation.</strong> If every answer needs to reference user-specific account state, the verifier will (correctly) reject most embedding candidates because the cached answer doesn't apply to the new user. You're left with the prefix cache only, which is still worth doing (Anthropic's prompt-caching API alone routinely cuts costs by 40–60% on long-context agentic workloads), but the embedding stage adds little.</p>
 
       <p><strong>High temporality.</strong> Workloads where answers go stale within hours (live status, prices, inventory) need a TTL on the embedding cache and a freshness check before the verifier runs. I keep TTLs short and use the cache primarily for "evergreen" intents.</p>
 
@@ -440,7 +440,7 @@ for k, v in buckets.items():
       <h2>The Build Order, If You're Starting Today</h2>
 
       <ol>
-        <li>Turn on prompt/KV caching in your inference stack — vLLM's <code>--enable-prefix-caching</code> or the equivalent API setting. This is one config flag and is essentially free.</li>
+        <li>Turn on prompt/KV caching in your inference stack: vLLM's <code>--enable-prefix-caching</code> or the equivalent API setting. This is one config flag and is essentially free.</li>
         <li>Add an exact-match cache with normalisation. A few hours of work, recovers the long tail of duplicates.</li>
         <li>Build an evaluation set of 500–1,000 labelled (query, query, equivalent?) pairs. You cannot tune anything downstream without it.</li>
         <li>Add the embedding ANN as a candidate generator at a recall-tuned threshold. Do <em>not</em> serve directly from this stage.</li>
@@ -448,7 +448,7 @@ for k, v in buckets.items():
         <li>Add the rewrite step only after you've shipped the cache for a week and looked at user complaints. If nobody notices the verbatim cached answers, skip it.</li>
       </ol>
 
-      <p>The order matters. Most teams I've seen start with semantic caching, get burned by false positives, and conclude that caching doesn't work for LLMs. It does — just not the way the slide deck suggested. Cache the computations, verify before you serve, and the 60% efficiency win is real.</p>
+      <p>The order matters. Most teams I've seen start with semantic caching, get burned by false positives, and conclude that caching doesn't work for LLMs. It does, just not the way the slide deck suggested. Cache the computations, verify before you serve, and the 60% efficiency win is real.</p>
 
     </div>
 
