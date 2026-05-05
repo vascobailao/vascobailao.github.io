@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What "Attention Is All You Need" Actually Did: A Non-Technical Tour | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">AI Foundations</p>
+      <h1 class="post-title">What "Attention Is All You Need" Actually Did: A Non-Technical Tour</h1>
+      <div class="post-meta">
+        <span>May 5, 2024</span>
+        <span class="dot"></span>
+        <span>13 min read</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Transformers</span>
+        <span class="tag">Foundations</span>
+        <span class="tag">Explainer</span>
+        <span class="tag">No Code</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>Almost every AI thing your phone now does, the chatbot, the autocomplete, the voice assistant, the image generator, the live translation, traces back to a single eight-page paper from 2017 with the slightly cheeky title <em>Attention Is All You Need</em>. Eight researchers at Google wrote it. It was published at a conference, got polite applause, and within five years it had quietly rewritten the entire field.</p>
+
+      <p>I want to explain what that paper actually did, why the thing it introduced (called the <strong>Transformer</strong>) was such a big deal, and why every single tool you have probably used in the last year is, under the hood, the same idea repeated at enormous scale. No code, no math, no prerequisites. If you can follow a recipe, you can follow this.</p>
+
+      <h2>The Problem They Were Trying to Solve</h2>
+
+      <p>Imagine you are translating a sentence from French to English, one word at a time, and you are not allowed to look at the whole French sentence. Instead, someone reads it to you aloud, and after each word they whisper a little summary into your ear. By the time the last French word arrives, you are working from a summary of a summary of a summary. The beginning of the sentence is a blur. You translate as best you can.</p>
+
+      <p>That, more or less, is how computers translated language before 2017. The dominant tool was something called a <strong>recurrent neural network</strong>, and its defining property was that it read text the way you read this sentence: left to right, one word at a time, carrying a running mental note of what came before. It worked, but it had two stubborn problems.</p>
+
+      <p>The first problem is the one you just lived through. By the time you reach the end of a long sentence, the beginning has faded. The running summary has been overwritten too many times. So translations of long passages got soggy in the middle.</p>
+
+      <p>The second problem is more practical. Because the model had to read words one at a time, in order, you could not speed it up by throwing more computers at it. It had to wait for word three before it could even think about word four. Modern computer chips, the GPUs you hear about, are built to do thousands of things in parallel. Forcing them to wait in line is like buying a Formula 1 car and using it to deliver pizza in a school zone.</p>
+
+      <h2>The Idea: Stop Reading in Order. Look at Everything at Once.</h2>
+
+      <p>The paper's central move is so simple that it sounds like cheating. What if, instead of reading the sentence left to right, the model just looked at every word at the same time, and for each word figured out which other words mattered most to its meaning?</p>
+
+      <p>That is what the word "attention" means in this context. It is not a mystical AI consciousness. It is a numerical answer to a very ordinary question: <em>when I am trying to understand this word, which other words in the sentence should I pay attention to?</em></p>
+
+      <p>Take the sentence <em>"The trophy didn't fit in the suitcase because it was too big."</em> What does <em>it</em> refer to? You and I know instantly that <em>it</em> means the trophy, because we have spent our lives understanding that suitcases that are too big are not usually the problem. The model has to figure that out from scratch. The attention mechanism is, roughly, the model glancing at every other word in the sentence and asking "are you the one I should be paying attention to right now?" The answer comes back as a set of weights, big numbers for the words that matter, small numbers for the words that don't, and the model uses those weights to build its understanding of <em>it</em>.</p>
+
+      <p>Now do that for every single word in the sentence at the same time, in parallel, on a GPU that loves doing things in parallel. That is the trick.</p>
+
+      <h2>The Architecture, Told as a Story</h2>
+
+      <p>The Transformer is built out of stacked-up copies of two main ideas: the attention mechanism we just described, and a small bit of ordinary number-crunching that happens after each attention step. The original paper had six of these stacks for the part that reads the input, and another six for the part that produces the output. Modern models have anywhere from a dozen to over a hundred. The architecture is the same; there is just more of it.</p>
+
+      <p>Here is the story of what happens when a Transformer reads a sentence.</p>
+
+      <h3>Step one: turning words into numbers</h3>
+
+      <p>Computers do not actually understand words. They understand numbers. So the very first thing a Transformer does is look up every word in a giant table that maps each word to a list of numbers. You can think of this list as the word's coordinates in a vast imaginary space, where words with similar meanings end up near each other. <em>King</em> and <em>queen</em> are neighbours. <em>Banana</em> is somewhere very far from both.</p>
+
+      <p>One subtle thing: because the model is going to look at all the words at once, it needs to know which word came first, second, third. So a small "position tag" is added to each word's coordinates. Now the model knows not just <em>what</em> the words are, but <em>where</em> they are in the sentence.</p>
+
+      <h3>Step two: every word looks at every other word</h3>
+
+      <p>This is the heart of the paper. Each word performs the glance-around-and-decide-what-matters operation we described earlier. The word <em>it</em> in our trophy sentence looks at <em>the</em>, <em>trophy</em>, <em>didn't</em>, <em>fit</em>, and so on, and produces a weighted blend that says "for the purposes of figuring out what I mean, I am 73% trophy, 12% suitcase, and the rest is filler."</p>
+
+      <p>The clever part is that this happens for every word at the same time, in parallel. Trophy is also looking around. Suitcase is also looking around. They all do it together. By the time this step finishes, every word has a richer version of itself that already incorporates the context of the whole sentence.</p>
+
+      <h3>Step three: the same trick, with multiple lenses</h3>
+
+      <p>The paper added one more refinement that turned out to be important. Instead of doing the attention step once, they did it eight times in parallel, with eight different ways of looking at the sentence. They called this <strong>multi-head attention</strong>. You can think of it as the model wearing eight different pairs of glasses simultaneously: one pair sensitive to grammar, another to topic, another to who-did-what-to-whom, and so on. Nobody tells the model what each pair of glasses should do; it figures that out during training.</p>
+
+      <p>The eight views are then merged back together, giving each word a final representation that is informed by many different angles on the sentence at once.</p>
+
+      <h3>Step four: a small private think</h3>
+
+      <p>After all that looking around, each word goes through a tiny solo session of additional number-crunching. Nothing fancy: just a couple of mathematical layers that let the word integrate everything it just learned and prepare itself for the next round.</p>
+
+      <h3>Step five: stack it up</h3>
+
+      <p>Then you do all of that again. And again. And again. Each repeat, called a <em>layer</em>, takes the already-context-rich representation of each word and refines it further. Early layers tend to learn simple things: this is a noun, this is a verb, this word is the subject. Middle layers handle phrases and clauses. Top layers handle meaning, intent, sentiment, and the kind of subtle stuff that makes the difference between a translation that sounds robotic and one that sounds like a person wrote it.</p>
+
+      <p>That is essentially the whole architecture. Look at everything at once, do it in parallel, repeat until the meaning is fully cooked.</p>
+
+      <div class="callout">
+        <p><strong>If you remember nothing else, remember this:</strong> the Transformer is a machine for letting every word in a sentence pay weighted attention to every other word, simultaneously, in parallel, many times over. Everything else is plumbing.</p>
+      </div>
+
+      <h2>Why This Was Such a Big Deal</h2>
+
+      <p>Three reasons, in order of how much they mattered.</p>
+
+      <p><strong>It scaled.</strong> Because every word could be processed in parallel, you could throw more computers at the problem and the model would actually get faster. The old left-to-right approach hit a wall: more hardware did not help, because the work was inherently sequential. The Transformer was hardware-shaped. As GPUs got bigger and cheaper, the Transformer got better, almost as if the two were designed for each other. They were not, but it sure looked like it.</p>
+
+      <p><strong>It got better with more data.</strong> The earlier approaches had a frustrating habit of plateauing. You would feed them more text and the quality would creep up a tiny bit and then stop. The Transformer kept improving, and the more text you gave it, the better it got, with no clear ceiling. This is the property that, five years later, gave us models trained on a meaningful fraction of the entire internet.</p>
+
+      <p><strong>It generalised.</strong> The original paper was about translation. But the architecture turned out to be almost laughably good at other things. Summarising? Yes. Question answering? Yes. Writing poetry? Yes. Generating images, given a small adaptation? Yes. Predicting protein structures? Yes. The same basic machine, retrained on different data, kept winning. This is rare in computer science. Most architectures are good at one or two things and need to be redesigned for the next problem. The Transformer just kept showing up and winning.</p>
+
+      <h2>What the Authors Probably Did Not Expect</h2>
+
+      <p>If you read the paper today, the most striking thing is how modest its claims are. It is presented as a faster, slightly more accurate way to translate languages. The authors do not say "we have invented the substrate of all future AI." They benchmark it on two translation tasks, report respectable improvements, and end on a calm note about future work. There is no hype.</p>
+
+      <p>What followed is the part that surprises everyone, including, I suspect, the authors. Within a year, OpenAI used the Transformer to build the first GPT. Within two years, Google used it to build BERT, which transformed search. Within five years, ChatGPT made the architecture famous outside of computer science departments. Within seven years, almost every billion-dollar AI company on earth was either selling a Transformer-based product or building one.</p>
+
+      <p>The line everyone quotes from the paper is the title itself. The authors meant it modestly: their model contained no recurrence, no convolutions, only attention. They were saying "all you really need, for this translation task, is the attention mechanism we just defined." The internet has since interpreted the title much more grandly. The thing about influential papers is that they rarely sound influential when they are written. They sound like incremental progress on a specific problem, by competent people who are not trying to oversell.</p>
+
+      <h2>What It Means For You</h2>
+
+      <p>You do not need to understand the Transformer in detail to use the tools built on top of it, any more than you need to understand the four-stroke engine to drive a car. But knowing the rough shape of it changes how you read the news. When someone announces a new model with twice as many <em>parameters</em>, that is a Transformer with more numbers in its lookup tables and more layers in its stack. When someone talks about <em>context length</em>, they mean how many words the attention mechanism can look at simultaneously. When you hear that a model is "10x more efficient," it is almost always because someone found a clever trick to make the look-at-everything-at-once step cheaper, since that is the part that gets expensive when sentences get long.</p>
+
+      <p>You also start to understand why these tools fail in the ways they do. They are very good at picking up on patterns in language because pattern-matching across context is exactly what attention does. They are bad at things that require real-world grounding, like knowing whether a fact is current, because the only "world" they have seen is the text they were trained on. They hallucinate because the same machinery that lets them generate fluent prose also lets them generate fluent prose that happens to be wrong, and there is no built-in fact-check.</p>
+
+      <p>If you take one thing away from this, take this: the AI revolution of the last several years is mostly the same idea, scaled up. The idea is from 2017. It is a clever way of letting a model figure out, for every piece of input, which other pieces matter. Everything else is engineering, money, and time. Knowing that demystifies a lot of the breathless coverage. The systems are powerful, but they are not magic. They are a 2017 paper, run very very fast, on a very very large amount of text.</p>
+
+      <p>And that is, more or less, all you need to know.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="../index.html#contact">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2024</span>
+    </div>
+  </footer>
+</body>
+</html>
