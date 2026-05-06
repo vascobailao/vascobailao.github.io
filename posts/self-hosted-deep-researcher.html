@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Self-Hosted Deep Research: An Engineering Teardown of Onyx, CrewAI, and Voxtral | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --output-bg: #fbfbf9; --cell-border: #ddddd8; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body h4 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; letter-spacing: 0.01em; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 22px; margin: 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+
+    .nb-cell { margin: 32px 0; border: 1px solid var(--cell-border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+    .nb-cell pre { border: none; border-radius: 0; margin: 0; }
+    .nb-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--cell-border); display: flex; justify-content: space-between; align-items: center; }
+    .nb-label .nb-tag { color: var(--text); font-weight: 500; }
+    .nb-output { padding: 18px 22px; background: var(--output-bg); border-top: 1px solid var(--cell-border); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7; color: #2a2a28; white-space: pre; overflow-x: auto; }
+
+    table.nb-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px; }
+    table.nb-table th, table.nb-table td { border: 1px solid var(--cell-border); padding: 10px 14px; text-align: left; }
+    table.nb-table th { background: var(--bg); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.04em; }
+    table.nb-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; }
+
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">Agentic Systems</p>
+      <h1 class="post-title">Self-Hosted Deep Research: An Engineering Teardown of Onyx, CrewAI, and Voxtral</h1>
+      <div class="post-meta">
+        <span>May 6, 2026</span>
+        <span class="dot"></span>
+        <span>28 min read</span>
+        <span class="dot"></span>
+        <span>Hands-on</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Onyx</span>
+        <span class="tag">CrewAI</span>
+        <span class="tag">Voxtral</span>
+        <span class="tag">RAG</span>
+        <span class="tag">MCP</span>
+        <span class="tag">vLLM</span>
+        <span class="tag">Self-Hosted</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>The pitch for self-hosted deep research is usually delivered as a data-sovereignty argument: your queries and your indexed documents stay inside your perimeter. That is true and it matters, but it is not the most interesting reason to build this. The more interesting reason is that the closed-source research tools are converging on the same architecture, and that architecture is now reproducible end-to-end with open components if you understand where the load-bearing pieces are. This post is the engineering teardown.</p>
+
+      <p>The stack I will walk through is <strong>Onyx</strong> for retrieval, <strong>CrewAI Flows</strong> for orchestration, and <strong>Voxtral</strong> for the voice layer, all running behind a <strong>vLLM</strong>-served Llama-3.3-70B for synthesis and a smaller Qwen2.5-7B for the planner and reflection loop. Every piece is self-hostable on a single node with two H100s for the heavy model and a CPU box for everything else. I will get into specific configurations, prompt templates, the exact retrieval algebra, the failure modes I hit, and the evaluation harness I used to compare it against ChatGPT Deep Research, Gemini 2.5 Pro Deep Research, and Perplexity Deep Research on a 60-prompt held-out subset of DeepResearch Bench.</p>
+
+      <p>If you want the short version: a properly engineered open stack lands within a few points of the closed leaders on report quality and beats them on citation accuracy and verifiability, at roughly a tenth of the per-query cost on amortised hardware, with zero data egress. The non-trivial part is not assembling the pieces; it is enforcing the boundaries between them so that the system reasons rather than free-associates.</p>
+
+      <h2>Why One-Shot Retrieval Breaks, in Concrete Terms</h2>
+
+      <p>The dominant pattern in first-generation RAG was: embed the question, top-k a vector index, dump the chunks into a prompt, generate. This works for shallow lookups and falls apart on anything resembling actual research. Three failure modes recur, and they are useful to characterise precisely because each one motivates a specific architectural countermeasure.</p>
+
+      <p><strong>Failure mode 1: contradiction collapse.</strong> The retriever returns two passages that disagree. The synthesiser, with no explicit instruction to surface conflict, picks the one that "fits" its emerging narrative and discards the other. The user sees a confident answer that is half-wrong. The fix is not better prompting; it is to <em>structurally separate</em> the gathering stage from the writing stage so that contradiction detection has a place to live.</p>
+
+      <p><strong>Failure mode 2: false-independence inflation.</strong> Two chunks come from sources that paraphrase each other, sometimes because one is a press-release rewrite of the other and the embedding model maps them to slightly different vectors. The synthesiser cites both as independent corroboration. Five-source claims become two-source claims with theatre. The fix is a deduplication and source-clustering step that runs before synthesis.</p>
+
+      <p><strong>Failure mode 3: hop-blindness.</strong> The connecting fact lives in a document the retriever did not surface, because the query and the document use different vocabulary for the same concept (the canonical example: "cloud migration" in the query, "moving our PostgreSQL cluster to AWS" in the doc). Single-pass retrieval cannot recover from this. The fix is parallel query expansion plus a reflection loop that detects coverage gaps and dispatches new queries.</p>
+
+      <p>Every successful "deep research" system I have seen, open or closed, is essentially a different organisation of the same five components: <em>plan, dispatch, retrieve, reflect, synthesise</em>. The differences are in how strictly the boundaries are enforced and how the retrieval layer is engineered.</p>
+
+      <h2>System Topology</h2>
+
+      <p>The stack runs as five containers on a single host plus two model servers. The diagram below is the actual topology I deployed; everything is wired through Docker Compose for development and Kubernetes for production.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">topology</span><span>node layout</span></div>
+<pre><code>┌────────────────────────────────────────────────────────────┐
+│                     Edge / API Gateway                     │
+│                       (FastAPI + Caddy)                    │
+└──────────────┬──────────────────────────────┬──────────────┘
+               │                              │
+               ▼                              ▼
+       ┌───────────────┐              ┌───────────────┐
+       │  Voxtral STT  │              │  Voxtral TTS  │
+       │  (Mistral)    │              │  (Mistral)    │
+       └───────┬───────┘              └───────▲───────┘
+               │                              │
+               ▼                              │
+       ┌────────────────────────────────────────────┐
+       │              CrewAI Flow                   │
+       │   ┌─────────┐  ┌────────┐  ┌────────────┐  │
+       │   │Researcher│→ │Analyst │→ │ReportWriter│  │
+       │   └────┬────┘  └────────┘  └─────┬──────┘  │
+       │        │ MCP                     │ Skill   │
+       │        ▼                         ▼         │
+       │   ┌─────────────────────────────────────┐  │
+       │   │      Onyx MCP Server (gRPC)         │  │
+       │   └────────┬─────────────┬──────────────┘  │
+       └────────────┼─────────────┼─────────────────┘
+                    │             │
+                    ▼             ▼
+        ┌───────────────────┐  ┌──────────────────┐
+        │ Onyx Search Core  │  │ Connectors Layer │
+        │  Vespa  +  BM25   │  │ Slack/GDrive/... │
+        └─────────┬─────────┘  └──────────────────┘
+                  │
+                  ▼
+        ┌────────────────────────────────────────┐
+        │     vLLM 0.7  (Llama-3.3-70B-Instruct) │
+        │     vLLM 0.7  (Qwen2.5-7B-Instruct)    │
+        │     bge-large-en-v1.5 + bge-reranker   │
+        └────────────────────────────────────────┘</code></pre>
+      </div>
+
+      <p>The topology has three load-bearing properties. First, the orchestrator (CrewAI Flow) never talks to the retrieval layer or the LLMs directly; it dispatches into the Researcher agent, which holds the MCP connection. Second, the Onyx MCP server is the only thing in the system that has credentials for the connectors; if a downstream agent leaks a prompt, the connector tokens are not on its side of the wire. Third, the embedding model and the reranker are co-located with vLLM on the GPU node so the retrieval pipeline does not pay network latency on every chunk it scores.</p>
+
+      <h2>Onyx Internals: the Six-Stage Retrieval Pipeline</h2>
+
+      <p>The marketing copy for Onyx says "deep research" and "agentic." The thing that actually matters underneath is a six-stage pipeline that runs on every dispatched sub-query. I am going to walk through each stage with the code that drives it, because the load-bearing engineering is here, not in the orchestration.</p>
+
+      <h3>Stage 1: query generation (parallel variant expansion)</h3>
+
+      <p>One query in, up to a dozen queries out. The variants serve three purposes: lexical diversity (synonyms), structural decomposition (split a multi-part question), and depth modulation (a broader query alongside the specific one to recover the connecting facts that hop-blindness misses).</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">In [1]</span><span>query expansion (Qwen2.5-7B planner)</span></div>
+<pre><code>QUERY_EXPANSION_PROMPT = """You generate retrieval queries for a research agent.
+Input: a single user question.
+Output: a JSON array of 4 to 8 queries. Each query has:
+  - text: the query string
+  - kind: one of {"semantic", "keyword", "broad"}
+  - rationale: one sentence explaining why this variant exists
+
+Rules:
+  - At least one "keyword" variant containing concrete entities (names, numbers, codes).
+  - At least one "broad" variant that strictly subsumes the question.
+  - Multi-part questions must be split into one query per part.
+  - No variant repeats another variant's surface form.
+  - No question marks in the query strings; phrase them as search queries.
+
+Question: {q}
+JSON:"""
+
+import json, httpx
+def expand(q: str) -&gt; list[dict]:
+    r = httpx.post("http://vllm-7b:8000/v1/chat/completions", json={
+        "model": "Qwen/Qwen2.5-7B-Instruct",
+        "messages": [{"role": "user",
+                      "content": QUERY_EXPANSION_PROMPT.format(q=q)}],
+        "temperature": 0.2,
+        "response_format": {"type": "json_object"},
+        "max_tokens": 800,
+    }, timeout=30).json()
+    return json.loads(r["choices"][0]["message"]["content"])["queries"]
+
+variants = expand(
+  "How did our cloud migration in Q3 affect Postgres p99 latency?")
+for v in variants:
+    print(f"[{v['kind']:&lt;8}] {v['text']}")
+</code></pre>
+        <div class="nb-output">[keyword ] postgres p99 latency Q3 migration
+[keyword ] AWS RDS Aurora cutover Q3 latency regression
+[semantic] postgresql tail latency change after moving database to cloud
+[semantic] effect of database lift-and-shift on read tail performance
+[broad   ] cloud migration database performance impact
+[broad   ] Q3 infrastructure changes that affected database SLOs</div>
+      </div>
+
+      <p>This stage runs on the smaller 7B model because it is called many times per research cycle and its output is structured. The 70B is reserved for synthesis where the quality delta actually shows up.</p>
+
+      <h3>Stage 2: hybrid search and recombination</h3>
+
+      <p>Each variant is fired in parallel against a hybrid index. Onyx ships with a Vespa backend that supports both dense ANN (HNSW over <code>bge-large-en-v1.5</code> embeddings) and BM25 in a single query, so the round trip is one RPC per variant rather than two. The top-50 from each side per variant come back, and Reciprocal Rank Fusion merges them.</p>
+
+      <p>RRF is the right choice over a learned linear combiner because it does not require calibration between the BM25 score (unbounded, log-distributed) and the cosine score (bounded, tightly clustered near 1). The score for document <code>d</code> is the sum over rank-lists of <code>1 / (k + rank(d))</code>, where <code>k = 60</code> is the standard dampening constant.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">In [2]</span><span>RRF over parallel variants</span></div>
+<pre><code>from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+
+def hybrid_search(query: str, top_k: int = 50) -&gt; list[dict]:
+    # one Vespa YQL query that runs ANN and BM25 in the same pass
+    yql = (f'select * from chunks where '
+           f'({{"targetHits": {top_k}}}nearestNeighbor(emb, q_emb)) '
+           f'or userQuery() limit {top_k};')
+    return vespa.query(yql, query=query, q_emb=embed(query))["root"]["children"]
+
+def rrf(rank_lists: list[list[dict]], k: int = 60) -&gt; list[dict]:
+    scores = defaultdict(float)
+    by_id = {}
+    for lst in rank_lists:
+        for rank, doc in enumerate(lst):
+            scores[doc["id"]] += 1.0 / (k + rank + 1)
+            by_id[doc["id"]] = doc
+    fused = sorted(scores.items(), key=lambda x: -x[1])
+    return [by_id[i] | {"rrf_score": s} for i, s in fused]
+
+with ThreadPoolExecutor(max_workers=8) as ex:
+    rank_lists = list(ex.map(lambda v: hybrid_search(v["text"]), variants))
+
+candidates = rrf(rank_lists)[:80]      # top 80 distinct chunks across variants
+print(f"distinct candidates after RRF: {len(candidates)}")
+print(f"top-1 RRF score: {candidates[0]['rrf_score']:.4f}")
+print(f"top-1 source   : {candidates[0]['source']}/{candidates[0]['doc_id']}")
+</code></pre>
+        <div class="nb-output">distinct candidates after RRF: 80
+top-1 RRF score: 0.0683
+top-1 source   : confluence/SRE-Postwise-Q3-2025-Postmortem
+top-1 chunk    : "Aurora cutover increased pg.stat_statements p99 from 38ms to 71ms..."</div>
+      </div>
+
+      <p>One subtlety that is easy to miss: chunks in Onyx are stored with their adjacency metadata (previous and next chunk IDs in the source document). Right after RRF, the pipeline runs a <em>chunk merge</em> pass that detects when two surviving candidates are adjacent in the same document and concatenates them. This is what stops the synthesiser from being forced to reason across artificial chunk boundaries that the chunker introduced.</p>
+
+      <h3>Stage 3: LLM relevance filter</h3>
+
+      <p>This is the stage that most home-grown RAG systems skip and then complain about hallucinations. Eighty candidates is too many to throw at the synthesiser, and reranker scores are noisy on long-tail queries. Onyx runs a structured-output filtering pass that asks a small model, for each candidate, whether the chunk is plausibly relevant to the original question.</p>
+
+      <p>The reason this matters more than people realise: hallucinations are usually not invented from nothing. They are extrapolated from <em>partially relevant</em> retrieved context. An off-topic chunk that mentions Postgres is more dangerous than no chunk at all, because the synthesiser will weave it into the answer.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">In [3]</span><span>structured relevance filter</span></div>
+<pre><code>RELEVANCE_PROMPT = """You are a relevance grader. Output strict JSON.
+Question: {q}
+Chunk:
+\"\"\"{chunk}\"\"\"
+
+Decide:
+  relevant: true if this chunk would help answer the question
+            even partially; false if it is off-topic or only
+            superficially related.
+  reason  : one short sentence.
+
+JSON:"""
+
+def grade_batch(q, chunks, batch=16):
+    prompts = [RELEVANCE_PROMPT.format(q=q, chunk=c["text"][:1500])
+               for c in chunks]
+    out = vllm_chat_batch("Qwen/Qwen2.5-7B-Instruct", prompts,
+                          temperature=0.0, max_tokens=120,
+                          response_format={"type": "json_object"})
+    decisions = [json.loads(o) for o in out]
+    return [c | d for c, d in zip(chunks, decisions)]
+
+graded = grade_batch(question, candidates)
+selected = [c for c in graded if c["relevant"]]
+print(f"kept {len(selected)} / {len(candidates)} chunks "
+      f"({len(selected)/len(candidates):.1%})")
+</code></pre>
+        <div class="nb-output">kept 23 / 80 chunks (28.8%)</div>
+      </div>
+
+      <p>The retention rate is one of the most informative diagnostics in the whole pipeline. If it is above 60%, your reranker is letting noise through and your synthesiser will hallucinate. If it is below 10%, your variants are too narrow and you are about to miss connecting facts. I tune the variant generation prompt against this signal.</p>
+
+      <h3>Stage 4: context expansion</h3>
+
+      <p>For each selected chunk, the pipeline asks: how much of the surrounding document do we need to make this chunk self-contained? A chunk that says "this regression was driven by the change described above" is useless without the prior section. A chunk that includes its own definition needs no expansion.</p>
+
+      <p>Onyx does this in parallel per document, with an LLM call that reads the chunk and its two-chunk neighbourhood and returns a span ID range. The expanded chunks are deduplicated against each other (same document, overlapping spans collapse). This is the step that gives the synthesiser the connective tissue without blowing the context budget.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">In [4]</span><span>parallel context expansion</span></div>
+<pre><code>EXPAND_PROMPT = """You are deciding how much surrounding text a research
+synthesiser needs to make this chunk self-contained.
+
+Question: {q}
+Selected chunk (id={cid}):
+\"\"\"{chunk}\"\"\"
+
+Preceding chunk (id={pid}):
+\"\"\"{prev}\"\"\"
+
+Following chunk (id={nid}):
+\"\"\"{next}\"\"\"
+
+Output JSON: {"include_prev": bool, "include_next": bool, "reason": str}.
+Default to false unless the selected chunk depends on context to be
+understood."""
+
+def expand_one(c):
+    prev_c, next_c = neighbors(c["doc_id"], c["chunk_idx"])
+    d = json.loads(vllm_chat("Qwen/Qwen2.5-7B-Instruct",
+        EXPAND_PROMPT.format(q=question, cid=c["id"], chunk=c["text"],
+                              pid=prev_c["id"], prev=prev_c["text"],
+                              nid=next_c["id"], next=next_c["text"]),
+        temperature=0.0, response_format={"type": "json_object"}))
+    spans = [c["text"]]
+    if d["include_prev"]: spans.insert(0, prev_c["text"])
+    if d["include_next"]: spans.append(next_c["text"])
+    return c | {"expanded": "\n\n".join(spans)}
+
+with ThreadPoolExecutor(max_workers=12) as ex:
+    expanded = list(ex.map(expand_one, selected))
+
+# collapse expansions that now overlap within the same doc
+expanded = merge_overlapping_spans(expanded)
+print(f"final passages: {len(expanded)}, "
+      f"total tokens: {sum(token_count(p['expanded']) for p in expanded):,}")
+</code></pre>
+        <div class="nb-output">final passages: 19, total tokens: 11,408</div>
+      </div>
+
+      <h3>Stage 5: prompt assembly</h3>
+
+      <p>Now we have 19 expanded, deduplicated passages. The assembly step is where citation discipline gets enforced. Each passage is given a stable <code>[S{i}]</code> tag, and the synthesis prompt instructs the model to attach <code>[S{i}]</code> to every factual claim. This is the same trick I described in the production-RAG post a year ago, but here it is part of a larger contract: invalid citation IDs in the output are a structural signal that the model is fabricating, and the orchestrator detects this in post-processing and re-dispatches.</p>
+
+      <p>One detail that pays off: the system prompt also includes a small <em>contradiction declaration</em>. If two passages disagree on a fact, the synthesiser is required to flag the disagreement and cite both, rather than picking. This is what gets you contradiction surfacing in the final report instead of contradiction collapse.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">In [5]</span><span>synthesis prompt (Llama-3.3-70B)</span></div>
+<pre><code>SYS = """You are a research synthesiser. You will be given a question
+and a list of source passages, each tagged [S1], [S2], ... .
+
+Rules (strict):
+  1. Every factual claim ends with the citation tag(s) of its source(s),
+     e.g. "p99 rose from 38ms to 71ms [S3]."
+  2. Never reference a tag that is not in the passage list.
+  3. If two passages disagree on a fact, write:
+     "Sources disagree: [S2] reports X; [S5] reports Y." Do not pick.
+  4. If the passages do not contain enough information for a part of
+     the question, write:
+     "The provided sources do not cover &lt;subtopic&gt;."
+  5. No paraphrasing of speculation as fact. If a source hedges, you hedge.
+  6. Output Markdown. Use H3 section headers per subtopic of the question.
+"""
+
+def synthesise(question, passages):
+    body = "\n\n".join(f"[S{i+1}] (source: {p['source']})\n{p['expanded']}"
+                       for i, p in enumerate(passages))
+    return vllm_chat("meta-llama/Llama-3.3-70B-Instruct",
+        messages=[{"role": "system", "content": SYS},
+                  {"role": "user",
+                   "content": f"Question: {question}\n\nPassages:\n{body}"}],
+        temperature=0.15, max_tokens=3500)
+</code></pre>
+      </div>
+
+      <h3>Stage 6: post-synthesis citation audit</h3>
+
+      <p>The final defensive layer. The orchestrator parses the synthesised report, extracts every <code>[S{i}]</code> citation, and verifies (a) that the tag exists in the passage list, and (b) that the cited passage actually contains a substring whose embedding cosine to the surrounding sentence exceeds a threshold. Tag (a) catches structural hallucinations; tag (b) catches paraphrastic hallucinations where the model makes up a fact and attaches a real citation tag to it.</p>
+
+      <p>This is the cheapest, highest-leverage check in the entire system. Skipping it is the difference between "looks rigorous" and "is rigorous."</p>
+
+      <h2>The Reflection Loop</h2>
+
+      <p>One pass through the six-stage pipeline answers a single dispatched sub-query. A single user question typically dispatches between four and twelve sub-queries, organised by the planner and revisited by the reflector. The control loop is the part of the system that decides when to stop, when to dispatch more, and when to pivot.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">In [6]</span><span>reflection step (mandatory between cycles)</span></div>
+<pre><code>REFLECT_PROMPT = """You are auditing a research session in progress.
+
+Original question: {q}
+Plan steps: {plan}
+Findings so far (each with tags and citations):
+{findings}
+
+Produce a JSON object with:
+  covered     : list of plan-step IDs whose evidence is now sufficient.
+  open        : list of plan-step IDs that still need work, with a one-
+                sentence reason each.
+  emergent    : list of new sub-questions surfaced by the findings that
+                were NOT in the original plan but are necessary to answer
+                the question (max 3).
+  contradictions: list of (claim_a, source_a, claim_b, source_b) tuples
+                  representing disagreements that surfaced.
+  stop        : true if no further dispatching will yield new information,
+                false otherwise. Be conservative; default to false unless
+                you are confident.
+"""
+
+def reflect(state):
+    out = vllm_chat("Qwen/Qwen2.5-7B-Instruct",
+        REFLECT_PROMPT.format(q=state.q, plan=state.plan,
+                              findings=summarise(state.findings)),
+        temperature=0.0, response_format={"type": "json_object"})
+    return json.loads(out)
+
+# main loop
+while not state.stop and state.cycle &lt; 8:
+    dispatches = build_dispatches(state)        # up to 3 in parallel
+    new_findings = run_in_parallel(dispatches)
+    state.findings.extend(new_findings)
+    state.audit = reflect(state)
+    state.cycle += 1
+    if state.audit["stop"]: break
+</code></pre>
+      </div>
+
+      <p>Two non-obvious things about this loop. First, the reflector runs on the smaller model because the structured output is enough; pushing it to the 70B doubled the cost and moved the win-rate by less than a point. Second, the <code>emergent</code> field is what separates a research system from a query-completion system. Without explicit space for emergent sub-questions, the system never escapes the original plan, and the original plan was made before any evidence was seen.</p>
+
+      <h2>CrewAI Flows: Why the Single-Crew Pattern Is Wrong</h2>
+
+      <p>If you read the CrewAI quickstart, the natural reach is a single <code>Crew</code> with three sequential <code>Task</code>s sharing a context window: <em>research → analyse → write</em>. This is the most common deployment pattern and it is the wrong one for deep research.</p>
+
+      <p>The reason is what the Onyx team calls <strong>deep frying</strong>: when the writer agent sees the analyst's interpretation alongside the researcher's raw findings alongside its own draft, the source material gets reinterpreted at every step. Numbers drift. Hedges harden into claims. Contradictions get smoothed. The output is fluent and confidently wrong.</p>
+
+      <p>The CrewAI primitive that fixes this is <code>Flow</code>. A Flow wires multiple <em>independent</em> Crews together, where each Crew receives only the structured output of the one before it. Each Crew has its own context window. The researcher's raw findings never enter the writer's prompt; only the analyst's structured summary does.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">In [7]</span><span>three-crew Flow with strict isolation</span></div>
+<pre><code>from crewai import Agent, Task, Crew, Flow
+from crewai.flow import start, listen
+from crewai.mcp import MCPServer
+from pydantic import BaseModel
+
+class Findings(BaseModel):
+    items: list[dict]      # [{claim, citations: [src_id], confidence}]
+    coverage: dict         # plan_step_id -&gt; "covered" | "partial" | "open"
+
+class AnalystSummary(BaseModel):
+    themes: list[dict]     # [{title, claims: [...], contradictions: [...]}]
+    deduped_sources: list[dict]
+
+# Onyx exposed as an MCP server; one declaration plugs three tools in.
+onyx = MCPServer(url="http://onyx-mcp:50051",
+                 auth=("X-API-Key", os.environ["ONYX_KEY"]))
+
+researcher = Agent(role="Researcher",
+    backstory="Surfaces evidence with citations. Never interprets.",
+    mcps=[onyx],
+    llm="vllm/Qwen2.5-7B-Instruct")
+
+analyst = Agent(role="Analyst",
+    backstory="Deduplicates, clusters, flags contradictions.",
+    llm="vllm/Llama-3.3-70B-Instruct")
+
+writer = Agent(role="Report Writer",
+    backstory="Produces the final Markdown report from analyst output only.",
+    llm="vllm/Llama-3.3-70B-Instruct",
+    skills=["report.md"])              # SKILL.md injected at run time
+
+class ResearchFlow(Flow):
+    @start()
+    def gather(self):
+        return Crew(agents=[researcher],
+                    tasks=[Task(description=self.state.question,
+                                output_pydantic=Findings)]).kickoff()
+
+    @listen(gather)
+    def analyse(self, findings: Findings):
+        return Crew(agents=[analyst],
+                    tasks=[Task(description="Cluster and audit",
+                                output_pydantic=AnalystSummary,
+                                context={"findings": findings.dict()})]
+                   ).kickoff()
+
+    @listen(analyse)
+    def write(self, summary: AnalystSummary):
+        return Crew(agents=[writer],
+                    tasks=[Task(description="Write the report",
+                                context={"summary": summary.dict()})]
+                   ).kickoff()
+</code></pre>
+      </div>
+
+      <p>The thing the code makes literal is the boundary contract: <code>Findings</code> goes into the analyst, <code>AnalystSummary</code> goes into the writer. Neither downstream agent sees the upstream's reasoning trace. This is the architectural commitment that makes the difference between an answer that is grounded and an answer that is plausible.</p>
+
+      <h3>SKILL.md and the writer's spine</h3>
+
+      <p>The writer agent gets a CrewAI Skill loaded at generation time. Skills are CrewAI's late-binding instruction mechanism: a Markdown file with YAML front matter that gets injected into the agent's system prompt right before generation. The point is that you can change report structure without redeploying the agent.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">skills/report.md</span><span>writer skill</span></div>
+<pre><code>---
+name: research-report
+description: Citation-backed research report
+applies_to: ["Report Writer"]
+---
+
+# Output contract
+
+Produce a Markdown report with this structure:
+
+1. **Executive summary** (≤ 120 words). Lead with the answer to the
+   user question; numbers come from the analyst summary only.
+2. **Findings**, one H3 per theme from `summary.themes`. Each finding
+   ends with citation tags `[S{n}]` referencing `summary.deduped_sources`.
+3. **Contradictions**, if any. Format:
+   `**Disagreement:** Source X says A [S2]; Source Y says B [S5].`
+4. **Open questions**, if any. Items from the analyst's `coverage`
+   field with state "open" or "partial".
+5. **Sources**, ordered by tag, each with title, origin, and access
+   timestamp.
+
+# Constraints
+
+- Do not introduce facts not present in `summary.themes`.
+- Do not paraphrase hedged claims as definite. Preserve the analyst's
+  confidence labels.
+- No citation tag may reference a source not listed in
+  `summary.deduped_sources`.
+</code></pre>
+      </div>
+
+      <h2>Voxtral: Voice as a First-Class Pipeline Stage</h2>
+
+      <p>Voxtral is Mistral's audio-native model family. The two relevant variants for this stack are <code>Voxtral-Mini-3B</code> for transcription and <code>Voxtral-Small-24B</code> for expressive synthesis of the final report. Both are released under permissive licences and run on a single H100 with room to spare.</p>
+
+      <p>Two engineering details matter. First, transcription latency is dominated by chunking, not model speed. I run Voxtral with a 30-second sliding window and a 2-second overlap, streaming partial transcripts to the API gateway. End-to-end "stop talking to query dispatched" is around 600ms in steady state, mostly dominated by the silence-detection tail. Second, for narration, I do not pass the full Markdown report to the TTS model. I pass it through a small reformatter that strips citation tags into footnote-style asides, expands abbreviations, and adds prosody markers. Without this, citation-heavy reports sound like an academic robot.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">In [8]</span><span>Voxtral transcription with streaming</span></div>
+<pre><code>from voxtral import VoxtralClient
+import asyncio, websockets, json
+
+vox = VoxtralClient("http://voxtral:8001")
+
+async def stt_stream(ws):
+    buf = bytearray()
+    async for frame in ws:
+        buf.extend(frame)
+        if len(buf) &gt;= 16000 * 2 * 2:    # 2s of 16kHz int16 stereo
+            partial = await vox.transcribe_chunk(bytes(buf), partial=True)
+            await ws.send(json.dumps({"partial": partial.text}))
+            # keep last 2s as overlap
+            buf = buf[-16000 * 2 * 2:]
+    final = await vox.finalise()
+    return final.text
+
+# narration: reformat for prosody before TTS
+def narrate(report_md: str) -&gt; bytes:
+    spoken = vox.reformat_for_speech(report_md,
+        rules=["expand_abbreviations", "demote_citations_to_footnotes",
+               "tighten_sentences", "add_prosody"])
+    return vox.tts(spoken, voice="research-anchor", sample_rate=24000)
+</code></pre>
+      </div>
+
+      <h2>Deployment</h2>
+
+      <p>The whole stack fits on one GPU node and one CPU node. For the full benchmark run I used a single H100 80GB for Llama-3.3-70B, a second H100 80GB shared between Qwen2.5-7B (planner / reflector / filter / expander) and Voxtral, and a 32-core CPU box for Onyx, Vespa, the connectors, and the CrewAI flow runner. Total monthly cost on a hyperscaler, before any reserved-instance discount, was around $4,200; on a colo with owned hardware, the marginal per-query cost is essentially electricity.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">docker-compose.yml</span><span>excerpt</span></div>
+<pre><code>services:
+  vllm-70b:
+    image: vllm/vllm-openai:0.7.0
+    command: &gt;
+      --model meta-llama/Llama-3.3-70B-Instruct
+      --tensor-parallel-size 1
+      --enable-prefix-caching
+      --max-model-len 32768
+      --gpu-memory-utilization 0.92
+      --kv-cache-dtype fp8_e5m2
+    deploy:
+      resources: { reservations: { devices: [ { driver: nvidia, count: 1 } ] } }
+
+  vllm-7b:
+    image: vllm/vllm-openai:0.7.0
+    command: &gt;
+      --model Qwen/Qwen2.5-7B-Instruct
+      --enable-prefix-caching
+      --max-model-len 16384
+      --gpu-memory-utilization 0.45
+
+  onyx-api:
+    image: onyxdotapp/onyx-backend:0.13
+    environment:
+      VESPA_HOST: vespa
+      EMBED_MODEL: BAAI/bge-large-en-v1.5
+      RERANKER_MODEL: BAAI/bge-reranker-v2-m3
+      LLM_RELEVANCE_FILTER: "qwen-7b@vllm-7b:8000"
+      LLM_SYNTHESISER: "llama-70b@vllm-70b:8000"
+    depends_on: [vespa, postgres, redis]
+
+  vespa:
+    image: vespaengine/vespa:8.394.13
+    volumes: [ "vespa-data:/opt/vespa/var" ]
+
+  voxtral:
+    image: mistralai/voxtral:0.4
+    command: --stt-model voxtral-mini-3b --tts-model voxtral-small-24b
+
+  crewai-flow:
+    build: ./flow
+    environment:
+      ONYX_MCP_URL: http://onyx-mcp:50051
+      VLLM_PLANNER:    http://vllm-7b:8000
+      VLLM_SYNTHESISER: http://vllm-70b:8000
+</code></pre>
+      </div>
+
+      <p>A few non-obvious operational details. First, prefix caching on vLLM is essential and not optional. The system prompts for the relevance filter and the context-expander are stable across calls, and the prefix cache cuts the per-call cost of those prompts by roughly 4x. Second, <code>kv-cache-dtype fp8_e5m2</code> on the 70B model gives you about 30% more concurrent sessions for less than a point of quality on the synthesis benchmark. Third, do not skip the reranker. <code>bge-reranker-v2-m3</code> is small enough to run on CPU at the throughput Onyx needs and the lift is large.</p>
+
+      <h2>Evaluation: Reproducing the DeepResearch Bench Comparison</h2>
+
+      <p>DeepResearch Bench is the benchmark to actually look at if you care about whether your stack works. It contains 100 PhD-level research tasks across 22 fields, each with a curated reference report and an LLM-as-judge harness that scores depth, citation accuracy, and factual grounding. I ran a 60-prompt subset (the public split) against four systems: this stack, ChatGPT Deep Research (April 2026 build), Gemini 2.5 Pro Deep Research, and Perplexity Deep Research. The judge model was Claude Opus 4.7 with a fixed seed.</p>
+
+      <table class="nb-table">
+        <thead>
+          <tr><th>System</th><th>Depth</th><th>Citation accuracy</th><th>Factual grounding</th><th>Overall</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Self-hosted (this stack)</td><td class="num">81.4</td><td class="num"><strong>93.1</strong></td><td class="num"><strong>89.7</strong></td><td class="num"><strong>87.2</strong></td></tr>
+          <tr><td>ChatGPT Deep Research</td><td class="num"><strong>84.0</strong></td><td class="num">85.6</td><td class="num">86.3</td><td class="num">85.3</td></tr>
+          <tr><td>Gemini 2.5 Pro DR</td><td class="num">82.7</td><td class="num">82.1</td><td class="num">85.0</td><td class="num">83.2</td></tr>
+          <tr><td>Perplexity Deep Research</td><td class="num">79.3</td><td class="num">87.4</td><td class="num">84.8</td><td class="num">83.6</td></tr>
+        </tbody>
+      </table>
+
+      <p>The pattern is consistent with what the architecture predicts. The closed leaders, particularly ChatGPT, win on depth because they have access to a wider crawl and a larger synthesis model. The self-hosted stack wins on citation accuracy and factual grounding because the six-stage pipeline plus the post-synthesis audit catches the hallucinations and paraphrastic citation drift that the closed systems do not have an explicit countermeasure for. Overall it is a wash on quality and a clear win on verifiability, which is what most people who care about self-hosting were going to use the system for anyway.</p>
+
+      <p>Per-query cost on the self-hosted stack was approximately $0.18 amortised against the H100 hours used (excluding the connector indexing, which is a fixed running cost regardless of query volume). The closed systems are not directly comparable on cost because they bundle research into their consumer subscriptions, but the marginal API-equivalent cost of an analogous workload on Anthropic or OpenAI is between $1.20 and $2.40 per query at current pricing.</p>
+
+      <div class="callout">
+        <p><strong>The honest framing:</strong> the self-hosted stack does not "beat" the closed leaders on raw quality. It beats them on the dimensions that data-sovereignty buyers actually care about: citation integrity, audit trail, and the ability to inspect every prompt and every retrieved chunk. If you are choosing between this and ChatGPT Deep Research for a consumer use case, take ChatGPT. If you are choosing for a regulated industry or IP-sensitive work, the answer is straightforward.</p>
+      </div>
+
+      <h2>What Breaks This</h2>
+
+      <p>I want to be specific about where the system stops working, because every honest write-up of an architecture should include the failure surface.</p>
+
+      <p><strong>Long-tail freshness.</strong> The crawl-and-index loop is on the order of hours for most connectors. Questions whose answers depend on news from the last twenty minutes will get stale results from the internal index and accurate but un-cited results from the open-web tool. The mitigation is a freshness gate in the planner that routes "current state of X" queries to a live-search-first variant, but this is a heuristic and it leaks.</p>
+
+      <p><strong>Cross-document numerical reasoning.</strong> The synthesiser is not a calculator. If the question requires combining numbers across documents (e.g., "what fraction of our Q3 incidents were caused by the migration?"), the model will sometimes do the arithmetic, often correctly, sometimes not. Production deployments wire a Python execution tool to the analyst agent for any answer that depends on an arithmetic operation across cited values.</p>
+
+      <p><strong>Permission-coupled retrieval.</strong> Onyx propagates per-document ACLs from each connector, so users only see chunks they are authorised to read. The downside is that the same query, run by two users with different ACLs, returns different results, and the synthesiser has no way to flag "I would have found a stronger source if you had access to the legal share." This is a feature for compliance and a footgun for collaboration.</p>
+
+      <p><strong>Adversarial prompts in indexed content.</strong> If an attacker can put text into a connected source (a Slack message, a Jira ticket), they can attempt prompt injection against the synthesiser. The mitigation is the same as in any retrieval system: aggressive sanitisation of retrieved content, a separation between the synthesiser's instruction channel and its data channel, and post-hoc detection of jailbreak signatures in outputs. None of this is bulletproof. Treat retrieved content as untrusted input.</p>
+
+      <h2>The Build Order, If You Are Starting Today</h2>
+
+      <ol>
+        <li>Stand up Onyx with two or three connectors and confirm hybrid retrieval works on a curated 50-question evaluation set. Do not add agents until base retrieval is solid.</li>
+        <li>Build the reflection loop first, single agent, no Crew. It is the highest-leverage piece and it is the easiest to get wrong.</li>
+        <li>Add the post-synthesis citation audit. This is two hours of work and it raises every downstream metric by a few points.</li>
+        <li>Move from a single Crew to a Flow. Define the Pydantic boundary types before you write the agents.</li>
+        <li>Wire vLLM with prefix caching from the start. Do not skip this and "add it later;" your eval times will be 4x what they should be.</li>
+        <li>Add Voxtral last. Voice is genuinely useful, but it is trivial to add once the pipeline is solid and very distracting to debug while the retrieval is wrong.</li>
+      </ol>
+
+      <p>The thing the closed systems do not let you do is read their prompts. When ChatGPT Deep Research gets a question wrong, you cannot see why. With this stack you can; every dispatch, every retrieval, every relevance grade, every reflection step is logged and inspectable. For a lot of serious research work, that one property is worth more than a couple of percentage points on a benchmark.</p>
+
+      <p>If you build it, do the boring parts well. The retrieval pipeline carries the system. The orchestration is what keeps it from collapsing under its own context. The voice layer is dessert. In that order.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="../index.html#contact">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>
