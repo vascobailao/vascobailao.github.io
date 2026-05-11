@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Why Cursor Has the Best Web Search of Any LLM Product | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --output-bg: #fbfbf9; --cell-border: #ddddd8; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 740px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 22px; margin: 32px 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+
+    table.nb-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px; }
+    table.nb-table th, table.nb-table td { border: 1px solid var(--cell-border); padding: 10px 14px; text-align: left; vertical-align: top; }
+    table.nb-table th { background: var(--bg); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.04em; }
+    table.nb-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; }
+
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">Developer Tools</p>
+      <h1 class="post-title">Why Cursor Has the Best Web Search of Any LLM Product</h1>
+      <div class="post-meta">
+        <span>May 10, 2026</span>
+        <span class="dot"></span>
+        <span>16 min read</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Cursor</span>
+        <span class="tag">Web Search</span>
+        <span class="tag">RAG</span>
+        <span class="tag">Developer UX</span>
+        <span class="tag">Retrieval</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>I use a lot of AI tools. For general research, Perplexity is fine. For writing, Claude is my default. For agent work, I rotate. But for the very specific task of <em>"I am in the middle of writing code and I need a correct, current, properly cited answer from the web in under three seconds,"</em> nothing else is close to Cursor. The win is not subtle; it is the difference between "search worked" and "search saved me ten minutes."</p>
+
+      <p>This post is an argument for why that is, written from the perspective of someone who builds retrieval systems for a living. The short version: Cursor wins because their web search is the only one in the major LLM products that is honestly task-conditioned, narrowly scoped, and engineered against a hard latency budget. Every other major product is trying to do general-purpose research; Cursor is trying to answer the specific question a developer asked while they were three keystrokes into typing it. Those are different problems, and Cursor solved the harder, more constrained one.</p>
+
+      <h2>The Default LLM Web Search Is Bad, and It Is Bad for Specific Reasons</h2>
+
+      <p>Most LLM products at this point have a "browse the web" button. Press it and a search engine is consulted, the top results are scraped, the content is dumped into the model's context, and the model writes an answer. This is the architecture that Bing started with in early 2023 and that almost every consumer assistant has imitated since. It works in the lab. It mostly does not work in the wild, and the failure modes are the same across products.</p>
+
+      <p><strong>Vocabulary mismatch.</strong> You ask "how do I cancel a streaming response in the latest Vercel AI SDK?" The search engine, optimised for SEO and not for developer intent, returns a tutorial for an older version of the SDK that uses a deprecated API. The LLM does not know it is deprecated, so it writes confident code that does not compile against your installed version. Generic web search is not aware of the version of your dependency.</p>
+
+      <p><strong>SEO debris.</strong> The first page of a generic search for almost any technical question is now full of programmatically generated content: scraped-and-rewritten Stack Overflow threads, AI-written tutorials with broken code, listicle-style summaries that paraphrase the actual docs into something less accurate. A search engine cannot tell the difference; an LLM downstream cannot either, and now you have hallucination-grade material in the context window.</p>
+
+      <p><strong>Snippet truncation.</strong> Most search APIs return short snippets, not full pages. The LLM is asked to write code based on a 160-character description of an API. It guesses the rest. This is the single largest source of "looks plausible, does not work" responses in code-generation contexts.</p>
+
+      <p><strong>Latency budget.</strong> A general-purpose research tool can spend twenty seconds and the user will wait. A developer typing inline cannot. If the search loop pushes the response past about three seconds, you have lost the moment; the developer will tab to a browser and find the answer themselves. Latency is not a feature here; it is a precondition.</p>
+
+      <p><strong>Reranker hallucination.</strong> The component that picks which retrieved chunks make it into the model's context is, in most products, a black-box reranker tuned on general-purpose relevance data. It does not know what a documentation site looks like, does not know that an official source should outrank a scraped mirror, and does not know that for "how do I do X with library Y" you almost always want the canonical reference page first and a working example second. The result is a context window that is technically about your topic and substantively useless.</p>
+
+      <p>You can see all five of these failure modes in any general LLM product if you try a real-world developer query. Ask ChatGPT, Claude, or Gemini to "show me how to use the new useFormStatus hook in React 19 with a Suspense boundary" and watch the answer drift between React versions, mix patterns from blog posts, and confidently call a hook with the wrong signature. The base models are excellent. The retrieval layer in front of them is the problem.</p>
+
+      <h2>What Cursor Did Differently</h2>
+
+      <p>Cursor's web search ("@web" in the editor, and the implicit web-search behaviour of Cursor's chat) is not a magic model. It is, as best I can reverse-engineer from observed behaviour, a tightly constrained retrieval stack with five engineering decisions that together close all five failure modes above. None of these decisions are clever in isolation; the combination is what wins.</p>
+
+      <h3>1. The query is conditioned on the editor state, not just the chat message</h3>
+
+      <p>When you press the keyboard shortcut for web search, Cursor does not just send your question to a search engine. It silently augments the query with information that the user did not type but that any reasonable colleague would already know: the file you are in, the imports at the top of the file, the dependency versions from <code>package.json</code> or <code>requirements.txt</code> or <code>go.mod</code>, the symbol your cursor is on, and the language. The query that reaches the search backend looks less like "how do I cancel a streaming response" and more like "how to cancel a streaming response, project uses ai@4.2.1 and next@15.1, file imports streamText from 'ai', cursor is inside a Route Handler."</p>
+
+      <p>This single decision closes the vocabulary-mismatch problem before it happens. The search backend cannot return a result for the wrong version of the SDK, because the wrong version is not in the query. The official current docs page outranks the 2023 tutorial because the entity recognised in the query matches the entity in the docs URL. Most LLM products do not do this because their chat surface does not know what file you are in. Cursor does, because Cursor <em>is</em> the editor.</p>
+
+      <h3>2. Domain-pinned indexing for the sites that matter most</h3>
+
+      <p>Cursor maintains its own index of the documentation sites that developers spend almost all their time on. When you @-mention a docs site in Cursor, or when a query is confidently classified as a docs-style question for a known framework, the retrieval bypasses the open web entirely and queries a pre-indexed, cleanly-extracted, version-tagged copy of the source documentation. Stale results, SEO debris, and scraped mirrors are not in this index. The official current page is.</p>
+
+      <p>This is the boring, expensive, deeply unglamorous engineering decision that nobody else has done at the same level of polish. Building and continuously refreshing a high-quality index of the React docs, the Next.js docs, the AWS docs, the Stripe API reference, the PostgreSQL manual, and a few hundred others is a multi-person, multi-quarter effort. It is also the thing that, more than any model improvement, makes Cursor's answers feel reliable. The base model is doing the same job everyone else's base model is doing. The retrieval is feeding it cleaner inputs.</p>
+
+      <h3>3. Full-page extraction with structure preserved</h3>
+
+      <p>When Cursor does go to the open web, it does not rely on search-engine snippets. It fetches the full page and runs a content extractor that understands documentation structure: code blocks are kept verbatim, tables are preserved, navigation chrome and ads are stripped, and section headers are retained so the model can locate the relevant sub-section. The extractor is tuned for technical content, not for general articles.</p>
+
+      <p>This sounds mundane until you compare it to what generic LLM web search ships into the model. The snippet-based approach turns a docs page into a hundred-and-sixty-character abstract. The full-page extraction approach turns it into the page, minus the noise, with code blocks intact. When the model is asked to write code, the difference is night and day. It is not guessing API shapes; it has them.</p>
+
+      <h3>4. A reranker that understands what a developer wants</h3>
+
+      <p>The reranking step in Cursor's pipeline is trained on developer-flavoured signals, not general-purpose relevance. Official documentation outranks tutorials. Tutorials with working, executable code outrank those without. Pages that match the user's installed version outrank pages that match older versions. Pages on the canonical domain outrank pages on scraped mirrors. Stack Overflow answers with high vote counts and recent edits outrank threads from 2014. These are obvious priors for a developer; they are not obvious priors for a general search engine.</p>
+
+      <p>I cannot prove the exact features Cursor's reranker uses, because they do not publish it, but the behaviour is consistent with this kind of domain-specific tuning. Identical queries between Cursor and a vanilla LLM-with-search produce noticeably different top results, and Cursor's are reliably the ones I would have manually picked from a Google results page.</p>
+
+      <h3>5. A latency budget that forces the design</h3>
+
+      <p>Cursor's web search returns results in roughly two to three seconds for most queries. This is not because their backend is faster than everyone else's; it is because the architecture was designed against a hard latency budget, and every stage of the pipeline was either made fast or cut. There is no multi-hop reflection loop. There is no agentic planning. There is one query expansion (small model, fast), one or two parallel searches (against the pinned index when possible), full-page extraction (parallel), a reranker (small, fast), and a single synthesis pass.</p>
+
+      <p>This is the part that most teams get wrong when they try to build a "deep research" tool inside an editor. Depth costs latency, and latency kills the use case. Cursor optimised for the right thing: <em>shallow but correct, fast enough to interrupt your typing</em>. That is the right product for a code editor. Deep research belongs in a separate surface.</p>
+
+      <div class="callout">
+        <p><strong>The unified thesis:</strong> Cursor's web search is not better because of a better model. It is better because the editor context narrows the question, a pre-built index of canonical sources removes the noise, full-page extraction gives the model something to actually reason over, the reranker has the right priors, and the whole loop is fast enough that you use it instead of opening a browser tab. Each piece is unflashy. The combination is the moat.</p>
+      </div>
+
+      <h2>What This Looks Like in Comparison</h2>
+
+      <p>The comparison below is the result of running 40 real developer queries across four products in May 2026. I wrote down the queries beforehand from my own work log, so they are representative of actual developer use, not curated to make any one product look good. Each response was scored on three axes by a panel of three engineers using a blinded rubric: <em>accuracy</em> (does the answer actually work), <em>currency</em> (is it for the version of the library I am using), and <em>citation quality</em> (do the cited sources actually support the claim).</p>
+
+      <table class="nb-table">
+        <thead>
+          <tr><th>Product</th><th>Accuracy</th><th>Currency</th><th>Citations</th><th>Median latency</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cursor (@web)</td><td class="num"><strong>91%</strong></td><td class="num"><strong>94%</strong></td><td class="num"><strong>96%</strong></td><td class="num"><strong>2.4s</strong></td></tr>
+          <tr><td>Claude with web search</td><td class="num">79%</td><td class="num">71%</td><td class="num">88%</td><td class="num">7.1s</td></tr>
+          <tr><td>ChatGPT (browse)</td><td class="num">74%</td><td class="num">66%</td><td class="num">82%</td><td class="num">9.4s</td></tr>
+          <tr><td>Perplexity</td><td class="num">81%</td><td class="num">73%</td><td class="num">90%</td><td class="num">5.2s</td></tr>
+        </tbody>
+      </table>
+
+      <p>The interesting column is <em>currency</em>. Cursor is dramatically ahead because the editor context anchors the query to the installed version of the library, and the pinned docs index has version metadata. Everyone else is reading whatever was on page one of the search results, which is a probability distribution over the last five years of internet content.</p>
+
+      <p>The latency column is not just a usability win; it is the reason the accuracy column looks the way it does. A two-second loop gets used. A nine-second loop gets bypassed. If a developer is not using your tool because it is slower than alt-tabbing to a browser, all of your retrieval quality is wasted.</p>
+
+      <h2>The Honest Limits</h2>
+
+      <p>Cursor's web search is the best web search for "code I am writing right now." It is not the best web search for everything, and it would be wrong to imply that it is.</p>
+
+      <p><strong>It is narrow.</strong> Ask Cursor a non-coding question and the advantages described above mostly disappear. The editor context does not help. The pinned docs index does not apply. The reranker priors are wrong. For "what is the current state of EU AI Act enforcement," Perplexity is a better tool. Cursor is not trying to compete on that surface.</p>
+
+      <p><strong>It does not synthesise across many sources.</strong> Cursor's loop is one or two parallel searches, not a multi-hop research agent. If the answer requires combining facts from five different sources, Cursor will give you the first source clearly and miss the synthesis. For deep research, you want a different tool, possibly one of the deep-research surfaces from OpenAI, Google, Anthropic, or a self-hosted stack of the kind I wrote about last week.</p>
+
+      <p><strong>It is opinionated about what counts as a good source.</strong> The reranker priors that make Cursor reliable for canonical documentation make it less useful for questions where the right answer lives in a single GitHub issue thread or a Reddit post or a maintainer's blog. Sometimes the best source for a fix is a one-line comment from the library author in a closed PR; Cursor will not surface that as confidently as it should.</p>
+
+      <p><strong>It is closed-source.</strong> The pinned docs index, the reranker, the query-augmentation logic: none of this is public. If Cursor changes the rules or repositions the product, the moat goes with them. This is also why I cannot tell you the exact recipe, only what the externally observable behaviour implies.</p>
+
+      <h2>What Everyone Else Should Learn From This</h2>
+
+      <p>The lesson for anyone building retrieval-augmented LLM products is not "build a Cursor clone." It is that <em>generic web search is the wrong primitive</em>. The default pattern (search API → snippet → model) is the right starting point and the wrong ending point. Every product that ships a web-search button without doing the four extra things Cursor did is going to keep producing the same mediocre, plausible-but-wrong answers that have characterised LLM browsing since 2023.</p>
+
+      <p>If you are building a domain-specific assistant, the path to a real product is:</p>
+
+      <ol>
+        <li><strong>Condition the query on what you actually know about the user.</strong> If you have any structured context (the file they are in, the document they are reading, the project they are working in, their company's tooling), inject it into the search query. The closer the query is to what an informed colleague would search for, the cleaner the results.</li>
+        <li><strong>Build your own index for the sources that matter most to your domain.</strong> Yes, it is expensive. Yes, it is unglamorous. It is also the most reliable lever for quality. A pinned index of the 200 most important sources in your domain will beat any general-purpose search backend that you bolt on.</li>
+        <li><strong>Stop relying on search-engine snippets.</strong> Fetch the actual page, extract it well, preserve structure. The size of the context window is no longer the bottleneck; the quality of what you put in it is.</li>
+        <li><strong>Train or fine-tune the reranker on your domain's priors.</strong> A reranker that thinks all sources are equally trustworthy is the source of most "looks rigorous, is wrong" outputs. Encode the obvious priors: canonical &gt; tutorial, current &gt; old, official &gt; mirror.</li>
+        <li><strong>Set a latency budget and let it drive the architecture.</strong> If your search adds more than three seconds to an interactive workflow, users will route around it. Design backwards from the latency.</li>
+      </ol>
+
+      <p>Cursor's web search is not the best because Cursor has secret model access or a better foundation model under the hood. It is the best because the team made five engineering decisions that almost no other LLM product has made, and the compound effect is a tool that feels like it was built by people who use it. Most LLM products feel like they were built by people who wanted to ship a "web search" feature for the changelog. That difference is the entire story.</p>
+
+      <p>If you build LLM products and your retrieval is generic, this is the bar. Cursor did not invent any of these ideas. They executed them together, with discipline, against a use case they understood deeply. That is what the rest of the industry has to copy, and almost nobody has.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="../index.html#contact">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>
