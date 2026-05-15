@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Day 1: The Landscape of AI Coding Tools | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --output-bg: #fbfbf9; --cell-border: #ddddd8; --lab-bg: #fffdf6; --lab-border: #e8dfb8; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .crumb { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px; }
+    .crumb a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+    .crumb a:hover { color: var(--text); border-bottom-color: var(--text); }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body h4 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 22px; margin: 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+
+    .nb-cell { margin: 32px 0; border: 1px solid var(--cell-border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+    .nb-cell pre { border: none; border-radius: 0; margin: 0; }
+    .nb-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--cell-border); display: flex; justify-content: space-between; align-items: center; }
+    .nb-label .nb-tag { color: var(--text); font-weight: 500; }
+    .nb-output { padding: 18px 22px; background: var(--output-bg); border-top: 1px solid var(--cell-border); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7; color: #2a2a28; white-space: pre; overflow-x: auto; }
+
+    table.nb-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13.5px; }
+    table.nb-table th, table.nb-table td { border: 1px solid var(--cell-border); padding: 9px 12px; text-align: left; vertical-align: top; }
+    table.nb-table th { background: var(--bg); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; }
+    table.nb-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; }
+
+    .lab { margin: 40px 0; padding: 28px 32px; background: var(--lab-bg); border: 1px solid var(--lab-border); border-radius: 8px; }
+    .lab-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+    .lab-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a6f00; background: #fff7d6; border: 1px solid #e8dfb8; padding: 4px 10px; border-radius: 4px; }
+    .lab-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+    .lab-title { font-size: 19px; font-weight: 500; letter-spacing: -0.005em; margin-bottom: 14px; }
+    .lab-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+    .lab p { margin-bottom: 16px; font-size: 15px; line-height: 1.75; }
+    .lab ul, .lab ol { margin: 0 0 16px 22px; }
+    .lab li { font-size: 15px; line-height: 1.7; margin-bottom: 8px; }
+    .lab .nb-cell { margin: 18px 0; }
+    .lab-deliv { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--lab-border); }
+    .lab-deliv-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a6f00; margin-bottom: 6px; }
+    .lab-deliv p { font-size: 14.5px; margin-bottom: 0; }
+
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } .lab { padding: 22px 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../../index.html">vasco fernandes</a>
+      <a class="nav-back" href="index.html">← course index</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="crumb"><a href="index.html">AI Coding Tools Course</a> / Day 01</p>
+      <p class="post-label">Day 1 of 14 / Hands-on / 5 labs</p>
+      <h1 class="post-title">The Landscape: How Modern AI Coding Tools Actually Work</h1>
+      <div class="post-meta">
+        <span>May 15, 2026</span>
+        <span class="dot"></span>
+        <span>~90 min including labs</span>
+        <span class="dot"></span>
+        <span>5 labs</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Course</span>
+        <span class="tag">Copilot</span>
+        <span class="tag">Cursor</span>
+        <span class="tag">Claude Code</span>
+        <span class="tag">Cody</span>
+        <span class="tag">Continue</span>
+        <span class="tag">Aider</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>Day 1 is intentionally a survey day. The mistake people make at the start of any AI tooling journey is to pick the most-marketed product and conclude that what it does <em>is</em> what AI coding tools do. The reality is that the seven major tools differ on almost every axis that matters: the interaction surface, the underlying model, the context they have access to, the deployment model, the latency budget, the kinds of tasks they are designed to handle. By the end of today you will have all seven (or as many as you can install in 90 minutes) running on your machine, and a personal opinion grounded in actual use rather than vendor copy.</p>
+
+      <p>This is the day where most people unlearn the most. The "AI coding tool" category is not one thing. It is at least three things, possibly five, and conflating them is the source of about 80% of the bad takes you will read about whether AI is helping engineers ship.</p>
+
+      <h2>The Three Modes</h2>
+
+      <p>Almost every AI coding tool currently shipping is one of three architectural shapes. A few are hybrids. None of them are doing magic; they are doing different things at different speeds with different scopes.</p>
+
+      <h3>Mode 1: Inline completion (autocomplete on steroids)</h3>
+
+      <p>The original AI coding interaction. You type, the model predicts the next chunk of code, you accept or reject with a key. The model sees a window of code around your cursor (the prefix and a small amount of the suffix), and produces a continuation. The interaction is sub-second, the cognitive cost is essentially zero (you tab or you keep typing), and the failure mode is that you accept code you did not actually want.</p>
+
+      <p>Tools in this mode: <strong>GitHub Copilot</strong> (the original), <strong>Tabnine</strong>, <strong>Codeium</strong>, <strong>Continue</strong> (open-source, can be self-hosted), <strong>Supermaven</strong>, <strong>Cursor</strong>'s tab-completion mode. The underlying technique is fill-in-the-middle (FIM), which we will dissect in detail on Day 3.</p>
+
+      <p><strong>What this mode is good at:</strong> typing less for code that follows obvious patterns. Repetitive boilerplate. The next line of a clear sequence. Property access. Familiar idioms in a language you know.</p>
+
+      <p><strong>What this mode is bad at:</strong> any task that requires understanding more than the local file. Architectural decisions. Anything where the right answer depends on code you have not opened recently. Refactors that span multiple files.</p>
+
+      <h3>Mode 2: Chat side-panel (a colleague at your desk)</h3>
+
+      <p>You ask a question, the model answers, optionally with a suggested edit you can apply. The interaction is multi-second, the model has access to whatever you @-mention or paste, and the failure mode is that the answer looks correct but does not work in your specific context.</p>
+
+      <p>Tools in this mode: <strong>Copilot Chat</strong>, <strong>Cursor's chat panel</strong>, <strong>Cody Chat</strong> (Sourcegraph), <strong>Continue's chat</strong>, <strong>JetBrains AI Assistant</strong>. The model is bigger than the inline-completion model and the latency budget is correspondingly larger.</p>
+
+      <p><strong>What this mode is good at:</strong> "how do I do X with library Y?" "what does this function do?" "rewrite this in TypeScript." Targeted single-file edits. Explanations.</p>
+
+      <p><strong>What this mode is bad at:</strong> tasks that require touching many files coherently. Tasks where the model needs to discover what it does not know. Anything you cannot fit in the context window manually.</p>
+
+      <h3>Mode 3: Agentic (a colleague who can run things)</h3>
+
+      <p>You describe a goal, the model plans, executes (running shell commands, reading files, writing files, running tests), observes the results, and iterates until the goal is met or it gives up. The interaction is multi-minute, the model has tool access, and the failure mode is that it confidently completes the wrong task or burns through your token budget on a doomed approach.</p>
+
+      <p>Tools in this mode: <strong>Claude Code</strong>, <strong>Cursor Agent</strong> (Composer), <strong>Aider</strong>, <strong>Cline</strong> (the open-source VS Code extension), <strong>OpenAI Codex CLI</strong>, <strong>Goose</strong>, <strong>Devin</strong> and other autonomous agent products. This is the mode that is changing fastest and the mode where the product UX matters most because you are reviewing diffs rather than typing characters.</p>
+
+      <p><strong>What this mode is good at:</strong> multi-file refactors. End-to-end feature implementation in well-tested code. Tasks where the spec is clear and the verification loop is fast (tests run in seconds, not minutes). Migration work.</p>
+
+      <p><strong>What this mode is bad at:</strong> tasks where the spec is ambiguous and the model has to guess. Codebases without good tests. Anything where you do not have time to review carefully (the speed at which agents produce diffs exceeds the speed at which most humans can review them, which is its own problem).</p>
+
+      <h2>The Tools, Mapped</h2>
+
+      <p>Here is the matrix you should keep in your head. It is opinionated; treat the cells as approximate strengths, not gospel.</p>
+
+      <table class="nb-table">
+        <thead>
+          <tr><th>Tool</th><th>Inline</th><th>Chat</th><th>Agent</th><th>Self-host</th><th>Best for</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>GitHub Copilot</td><td>★★★★★</td><td>★★★★</td><td>★★★</td><td>No</td><td>Default for many teams</td></tr>
+          <tr><td>Cursor</td><td>★★★★</td><td>★★★★★</td><td>★★★★★</td><td>No</td><td>Heavy editor users</td></tr>
+          <tr><td>Claude Code</td><td>n/a</td><td>★★★★</td><td>★★★★★</td><td>No</td><td>Terminal-native, deep agentic</td></tr>
+          <tr><td>Cody (Sourcegraph)</td><td>★★★★</td><td>★★★★</td><td>★★★</td><td>Yes (Enterprise)</td><td>Large monorepos</td></tr>
+          <tr><td>Continue</td><td>★★★★</td><td>★★★★</td><td>★★★</td><td>Yes</td><td>OSS, BYO model</td></tr>
+          <tr><td>Aider</td><td>n/a</td><td>★★★</td><td>★★★★</td><td>Yes (BYO key)</td><td>Git-native CLI workflow</td></tr>
+          <tr><td>Cline</td><td>n/a</td><td>★★★</td><td>★★★★</td><td>Yes</td><td>Open agent in VS Code</td></tr>
+        </tbody>
+      </table>
+
+      <p>The matrix exists so you can choose tools by job rather than by hype. If your work is mostly typing within a file, you want a strong inline mode. If your work is mostly multi-file changes with verification, you want a strong agent. If your employer cannot allow code to leave the network, you want self-host. Most engineers end up with two or three tools (typically: a fast inline tool, a strong chat panel, and an agent for the bigger jobs), not one.</p>
+
+      <div class="callout">
+        <p><strong>The principle behind the labs that follow:</strong> you cannot pick tools well without using them on tasks that resemble your real work. Vendor demos are curated. Your codebase is not. Today's labs make you generate your own evidence.</p>
+      </div>
+
+      <h2>Setup You Need Before the Labs</h2>
+
+      <p>You will need:</p>
+
+      <ul>
+        <li>A laptop with at least 16GB RAM. More if you are going to run a local model.</li>
+        <li><strong>VS Code</strong> installed (most extensions live there; even if you prefer JetBrains, install VS Code as a second editor for this course).</li>
+        <li><strong>Node.js 20+</strong> and <strong>Python 3.11+</strong>.</li>
+        <li>A small open-source repo to experiment in. Clone <a href="https://github.com/tiangolo/fastapi" rel="noopener" target="_blank"><code>fastapi/fastapi</code></a> if you want a Python target, or <a href="https://github.com/expressjs/express" rel="noopener" target="_blank"><code>expressjs/express</code></a> if you prefer Node. Anything around 50k lines of real code will do.</li>
+        <li>A free <strong>GitHub account</strong> (Copilot has a free tier for non-students as of late 2025).</li>
+        <li>A <strong>Cursor account</strong> (free tier available).</li>
+        <li>A <strong>Claude.ai account</strong> with API access enabled (the free tier of the web product is fine for some labs; Claude Code needs API credits, budget $5 to be safe).</li>
+        <li>A <strong>terminal</strong> you are comfortable in.</li>
+      </ul>
+
+      <p>If your employer's policy prevents you from using cloud-hosted tools on company code, do every lab in this course on a personal scratch repo. The point is to learn the tools, not to leak your codebase.</p>
+
+      <h2>The Labs</h2>
+
+      <p>Each lab below is independently runnable. They build a portfolio of evidence about which tools work for you. Do not skip the deliverables; they are the point.</p>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 01</span>
+          <span class="lab-num">~25 min</span>
+        </div>
+        <h3 class="lab-title">Install three tools and confirm they work</h3>
+        <p class="lab-meta">Tools: Copilot, Cursor, Claude Code · Difficulty: easy</p>
+
+        <p>Get three different tools installed and able to make a successful call against your test repo. The point is not to use them yet; it is to surface installation friction (which is itself a signal about how the tool will fit into your workflow).</p>
+
+        <h4>Step 1: GitHub Copilot in VS Code</h4>
+        <ol>
+          <li>Install the GitHub Copilot extension and the Copilot Chat extension from the VS Code marketplace.</li>
+          <li>Sign in with the account that has Copilot enabled.</li>
+          <li>Open a Python file in your test repo. Type <code>def hello_world():</code> and a newline. Confirm a ghost-text suggestion appears within a second.</li>
+          <li>Open Copilot Chat (Ctrl+Alt+I or Cmd+Shift+I), ask "what does this file do?" with the current file as context. Confirm you get a coherent answer.</li>
+        </ol>
+
+        <h4>Step 2: Cursor</h4>
+        <ol>
+          <li>Download Cursor from <code>cursor.com</code>. It is a fork of VS Code, so your settings can be imported.</li>
+          <li>Sign in. Open the same test repo.</li>
+          <li>In the chat panel (Cmd+L), ask the same "what does this file do?" question. Note the difference in response style and speed.</li>
+          <li>Open Composer (Cmd+I), give it a small task ("add a docstring to every function in this file"). Confirm the diff preview shows up.</li>
+        </ol>
+
+        <h4>Step 3: Claude Code</h4>
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">terminal</span><span>install Claude Code</span></div>
+<pre><code># macOS / Linux
+npm install -g @anthropic-ai/claude-code
+
+# launch in your test repo
+cd ~/code/fastapi
+claude
+
+# inside Claude Code, try:
+&gt; explain what tests/test_main.py is testing in one paragraph
+</code></pre>
+        </div>
+
+        <p>Confirm the response includes specific test names from the file. If it does not, your API key is not set or the working directory is wrong; re-run.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A note in your course journal listing: total install time per tool, friction encountered, and your first-impression rating (1 to 5) of each tool's onboarding. Be honest; this is the only data you will have when picking tools later.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 02</span>
+          <span class="lab-num">~20 min</span>
+        </div>
+        <h3 class="lab-title">Run the same task across all three tools</h3>
+        <p class="lab-meta">Difficulty: easy · Generates the first comparison data</p>
+
+        <p>Pick a real task that does not require deep codebase knowledge: <em>"add a function <code>parse_iso8601(s: str) -&gt; datetime</code> that parses an ISO-8601 string and raises <code>ValueError</code> on malformed input. Include a unit test."</em> Run this exact prompt in all three tools, against an empty file in your test repo.</p>
+
+        <p>Score each result on:</p>
+        <ul>
+          <li><strong>Correctness:</strong> does the code work as specified?</li>
+          <li><strong>Coverage:</strong> does the unit test cover the malformed-input case?</li>
+          <li><strong>Style:</strong> does it match the existing codebase's conventions (typing style, docstring format, test framework)?</li>
+          <li><strong>Latency:</strong> wall-clock seconds from prompt sent to acceptable diff in front of you.</li>
+        </ul>
+
+        <p>Pay particular attention to whether each tool noticed the existing test framework in the repo. Copilot Chat will often guess <code>unittest</code> by default; Cursor's Composer and Claude Code should pick up <code>pytest</code> because they have repo-wide context.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A markdown table in your journal with the four scores per tool. This is your first data point on a question you will keep answering for the rest of the course: <em>which tool is the right one for which task?</em></p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 03</span>
+          <span class="lab-num">~15 min</span>
+        </div>
+        <h3 class="lab-title">Measure inline-completion latency rigorously</h3>
+        <p class="lab-meta">Difficulty: medium · Tools: Copilot, Cursor (tab), optionally Continue · Reveals how much sub-second-ness you actually get</p>
+
+        <p>Inline completion is the mode that lives or dies on latency. A 200ms ghost text feels magical; a 700ms ghost text feels broken. Most teams have never measured this on their actual workload.</p>
+
+        <p>The procedure: in the same file, type each of the prompts below, time how long until the first complete suggestion appears (use a stopwatch or your phone's timer; precision is unnecessary, repeatability is what matters). Repeat each prompt three times. Discard the first run; record the median of the next two.</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">prompts.py</span><span>fixed-prompt latency suite</span></div>
+<pre><code># Type these one at a time. Wait for ghost text. Time it.
+
+# Prompt 1: trivial completion
+def add(a: int, b: int) -&gt; int:
+
+# Prompt 2: short context, less obvious
+def parse_user_agent(ua: str) -&gt;
+
+# Prompt 3: requires looking at the imports
+import re
+from datetime import datetime, timezone
+
+def parse_iso(s: str) -&gt;
+
+# Prompt 4: code that depends on a sibling function
+def fetch_user(uid: str) -&gt; dict:
+    """Fetch user from cache, falling back to db."""
+
+def fetch_users_batch(uids: list[str]) -&gt; list[dict]:
+
+# Prompt 5: deliberately ambiguous (good completion is hard)
+def process(data):
+</code></pre>
+        </div>
+
+        <p>Tabulate the median latency per tool per prompt. You should see a clear pattern: completions for short, obvious code are fast; completions that require more context are slower (because the tool is sending more state to the backend). On most networks Copilot lands at 200 to 500ms; Cursor's tab completion is typically 100 to 300ms (their <code>Cursor Tab</code> model is built specifically for this latency band); Continue with a local model can be 60 to 150ms but with smaller suggestions.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A small table of medians. If any tool routinely takes more than a second on prompts 1 to 3, it is not viable as your inline tool on this network. Record this; it is one of the most useful things you can know.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 04</span>
+          <span class="lab-num">~20 min</span>
+        </div>
+        <h3 class="lab-title">Probe each tool's context strategy</h3>
+        <p class="lab-meta">Difficulty: medium · Reveals what the tool actually sees</p>
+
+        <p>Models do not "know your codebase." They know whatever the tool put in their context window. The difference between tools is mostly the difference in context strategy. This lab makes that visible.</p>
+
+        <p>Pick a function in your test repo that is called by exactly one other function elsewhere in the codebase. Open the file containing the called function. Now ask each tool: <em>"Where in the codebase is this function called from? Quote the calling line."</em></p>
+
+        <p>The pattern of correct answers tells you what each tool's retrieval looks like:</p>
+
+        <ul>
+          <li><strong>Copilot Chat</strong> with the <code>@workspace</code> mention has a chance; without it, very low chance.</li>
+          <li><strong>Cursor's chat</strong> with no @-mentions will sometimes get it via its background indexing; with <code>@codebase</code> it should reliably succeed.</li>
+          <li><strong>Claude Code</strong> typically gets it because it can run <code>grep</code> as a tool call and find the answer that way.</li>
+          <li><strong>Continue</strong> with no embeddings configured will fail; with embeddings, it depends on the configuration.</li>
+        </ul>
+
+        <p>Try also asking: <em>"Summarise every place in the codebase where authentication is checked."</em> This is a multi-hop retrieval question and is much harder. Note which tools attempt actual repo search and which ones hallucinate plausibly-named files that do not exist.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A short note per tool: <em>does it have repo-wide retrieval, and is it on by default?</em> This is the single most important property to know about a tool, and most documentation is unclear about it.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 05</span>
+          <span class="lab-num">~10 min · capstone for Day 1</span>
+        </div>
+        <h3 class="lab-title">Build your personal scoring rubric</h3>
+        <p class="lab-meta">Difficulty: easy · Most useful artifact of the day</p>
+
+        <p>Take everything you have noticed in Labs 1 to 4 and write down the rubric you will use to evaluate every AI coding tool from now on. The rubric is personal; what matters is that it is explicit. A reasonable starting template:</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">rubric.md</span><span>personal scoring rubric</span></div>
+<pre><code># My AI coding tool rubric
+
+Score each axis 1 to 5. Total out of 35. I will not adopt a tool below 22.
+
+1. **Latency for inline completion** (median over my benchmark prompts).
+   1: &gt;1s, painful. 5: &lt;200ms, invisible.
+
+2. **Repo-wide retrieval quality** (Lab 04 questions).
+   1: hallucinates files. 5: cites real call sites every time.
+
+3. **Style match to my codebase** (does the output blend in?).
+   1: ignores conventions. 5: indistinguishable from my code.
+
+4. **Diff review UX** (when it produces multi-file changes, can I review them sanely?).
+   1: dumps text. 5: structured diffs with explanations.
+
+5. **Failure recovery** (what happens when a command fails, a test breaks, an import is wrong?).
+   1: gives up or loops. 5: diagnoses and proposes a real fix.
+
+6. **Friction cost** (install, login, daily startup, license).
+   1: enterprise-only with a long onboarding. 5: install and go.
+
+7. **Data posture** (does my code leave my machine? where? for how long?).
+   1: opaque cloud-only. 5: self-hostable with audit logs.
+
+# My current scores after Day 1
+
+| Tool          | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Total |
+|---------------|---|---|---|---|---|---|---|-------|
+| Copilot       | _ | _ | _ | _ | _ | _ | _ | _     |
+| Cursor        | _ | _ | _ | _ | _ | _ | _ | _     |
+| Claude Code   | _ | _ | _ | _ | _ | _ | _ | _     |
+</code></pre>
+        </div>
+
+        <p>You will adjust the weights as the course progresses. The point of writing it down today, before you have strong opinions, is that it forces you to be honest later when a vendor announcement makes you want to switch tools for reasons that have nothing to do with these axes.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>Save <code>rubric.md</code> in the same place you kept your other notes. You will refer back to it on Day 13 when we build a real evaluation harness.</p>
+        </div>
+      </div>
+
+      <h2>What You Should Take Away</h2>
+
+      <p>Five things, regardless of which tools you ended up liking.</p>
+
+      <p><strong>The category is not one thing.</strong> Inline completion, chat, and agents are different products that happen to share a model under the hood. Conflating them produces bad takes (e.g., "AI coding tools cannot do real refactors" is true of inline completion and false of agents).</p>
+
+      <p><strong>Latency dominates UX in inline mode.</strong> A faster, dumber model usually wins inline. A slower, smarter model usually wins in chat and agent modes. There is no single best model across all three.</p>
+
+      <p><strong>Context strategy is the single biggest quality lever.</strong> The same model with bad context produces hallucinations. The same model with good context (file imports, related files, project conventions, repo-wide retrieval) produces code that blends in. Most of the differentiation between tools is here.</p>
+
+      <p><strong>Self-hosting is real but it is not free.</strong> The open-source agentic stack we explored a few posts back (Onyx + CrewAI + vLLM) is a real alternative to Cursor and Claude Code, but it requires engineering investment. The trade is data sovereignty and cost predictability versus polish and pace of model improvement.</p>
+
+      <p><strong>You need a rubric, not a favourite.</strong> Picking a tool because you saw a good demo is how teams end up with three Copilot licenses they do not use. The rubric you wrote in Lab 5 is the artefact that should drive every adoption decision from now on.</p>
+
+      <h2>Tomorrow</h2>
+
+      <p>Day 2 covers responsible AI for coding tools, but in the engineering sense rather than the marketing sense. Where does your code go when you press Tab? What gets retained? What is the actual public-code-matching policy of each major tool? Can you prove it with a network audit? You will leave Day 2 with a documented data-flow diagram for every tool you use, which is the kind of artefact that makes legal and security stop blocking your team's adoption.</p>
+
+      <p>Bring a packet capture tool. We are going to look at what crosses the wire.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="index.html">← Course index</a>
+      <a href="../../index.html#contact">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>

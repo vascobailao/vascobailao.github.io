@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Coding Tools: A Practical 14-Day Course | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --cell-border: #ddddd8; --done: #1f6f3d; --upcoming: #6b6b67; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+
+    .course-header { padding-top: calc(var(--nav-h) + 80px); padding-bottom: 64px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .course-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .course-title { font-size: clamp(32px, 5vw, 52px); font-weight: 300; letter-spacing: -0.025em; line-height: 1.08; margin-bottom: 20px; }
+    .course-subtitle { font-size: clamp(17px, 2vw, 21px); font-weight: 400; color: var(--muted); letter-spacing: -0.005em; line-height: 1.5; max-width: 680px; margin-bottom: 32px; }
+    .course-meta { display: flex; gap: 24px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+    .course-meta span strong { color: var(--text); font-weight: 500; }
+
+    .section-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+    .intro p { margin-bottom: 22px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .intro { padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+    .intro strong { color: var(--text); font-weight: 600; }
+
+    .day-grid { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .day-card { background: var(--surface); padding: 24px 28px; display: grid; grid-template-columns: 60px 1fr auto; gap: 20px; align-items: center; text-decoration: none; color: var(--text); transition: background 0.15s; }
+    .day-card.published:hover { background: var(--bg); }
+    .day-card.upcoming { cursor: default; opacity: 0.6; }
+    .day-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    .day-num strong { display: block; font-size: 18px; color: var(--text); font-weight: 500; margin-top: 4px; }
+    .day-content { display: flex; flex-direction: column; gap: 4px; }
+    .day-title { font-size: 16px; font-weight: 500; letter-spacing: -0.005em; line-height: 1.3; }
+    .day-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .day-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--muted); text-align: right; white-space: nowrap; }
+    .day-meta .day-status { display: inline-block; padding: 3px 8px; border-radius: 3px; background: var(--tag-bg); margin-bottom: 6px; }
+    .day-meta .day-status.done { background: #e6f3eb; color: var(--done); }
+
+    .closing { margin: 80px 0; padding: 32px; background: var(--code-bg); border-left: 3px solid var(--text); border-radius: 0 4px 4px 0; }
+    .closing p { font-size: 15px; margin-bottom: 12px; }
+    .closing p:last-child { margin-bottom: 0; }
+    .closing strong { font-weight: 600; }
+
+    footer { padding: 40px 0; border-top: 1px solid var(--border); margin-top: 64px; }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+
+    @media (max-width: 640px) {
+      .container { padding: 0 20px; }
+      .nav-inner { padding: 0 20px; }
+      .day-card { grid-template-columns: 48px 1fr; gap: 14px; padding: 18px 20px; }
+      .day-meta { grid-column: 2; text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="course-header">
+      <p class="course-label">14-Day Course / Vendor-Neutral / Hands-On</p>
+      <h1 class="course-title">AI Coding Tools: A Practical 14-Day Course</h1>
+      <p class="course-subtitle">A working engineer's course on getting real value out of Copilot, Cursor, Claude Code, Cody, Continue, Aider, and the rest. Heavy on labs, light on marketing.</p>
+      <div class="course-meta">
+        <span><strong>14</strong> days</span>
+        <span><strong>60+</strong> labs</span>
+        <span><strong>Vendor-neutral</strong></span>
+        <span>Started <strong>May 15, 2026</strong></span>
+        <span>One lesson per day</span>
+      </div>
+    </div>
+
+    <div class="intro">
+      <p class="section-label">Why this course</p>
+      <p>The official certification material for AI coding tools is, with rare exceptions, vendor marketing dressed as education. It tells you what features the vendor's product has. It does not tell you when those features actually help, when they get in the way, how the tools compare, or how to measure whether you are getting value from any of them. After teaching engineers to use these tools for years, I am convinced the gap between "I have a Copilot license" and "I am genuinely faster because of AI" is mostly a matter of unlearning the marketing and learning the engineering.</p>
+      <p>This course is the version I wish existed. It covers the same surface area as the major certifications (responsible use, prompt crafting, code generation, refactoring, testing, debugging) but it does so across <strong>seven tools</strong> instead of one, with <strong>real labs you can run on your own machine</strong>, and with an honest treatment of where each tool wins and loses. By the end of it you will have a personal evaluation rubric, a productivity baseline, and a clear answer to the question "which of these should I actually use, and for what."</p>
+      <p>The cadence is one lesson per day for fourteen days. Each lesson takes 60 to 120 minutes including the labs. You can compress the schedule if you want; you cannot skip the labs and learn anything useful.</p>
+    </div>
+
+    <div>
+      <p class="section-label">The 14-day curriculum</p>
+      <div class="day-grid">
+
+        <a class="day-card published" href="day-01-the-landscape.html">
+          <div class="day-num">DAY<strong>01</strong></div>
+          <div class="day-content">
+            <div class="day-title">The Landscape: How Modern AI Coding Tools Actually Work</div>
+            <div class="day-desc">Inline completion vs. chat vs. agentic. Market map across seven tools. Five labs to install, configure, and benchmark them on your own machine.</div>
+          </div>
+          <div class="day-meta"><span class="day-status done">PUBLISHED</span><br>May 15 · 5 labs</div>
+        </a>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>02</strong></div>
+          <div class="day-content">
+            <div class="day-title">Responsible AI for Coding Tools</div>
+            <div class="day-desc">Where your code goes, what gets retained, license matching, IP exposure. Self-hosted vs. cloud, with a network audit lab.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 16</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>03</strong></div>
+          <div class="day-content">
+            <div class="day-title">How Code Completion Actually Works</div>
+            <div class="day-desc">Fill-in-the-middle, ghost text, latency budgets, tokenisation. Build a tiny FIM completion engine end-to-end.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 17</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>04</strong></div>
+          <div class="day-content">
+            <div class="day-title">Context: What the Model Actually Sees</div>
+            <div class="day-desc">@-mentions, file context, repo grep, embeddings, retrieval. A/B test the same task with five different context strategies.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 18</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>05</strong></div>
+          <div class="day-content">
+            <div class="day-title">Prompt Engineering for Code</div>
+            <div class="day-desc">Specificity, examples, output formats, the XML/Markdown choice. Engineer five prompts for the same refactor and measure quality.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 19</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>06</strong></div>
+          <div class="day-content">
+            <div class="day-title">System Prompts and Custom Instructions</div>
+            <div class="day-desc">CLAUDE.md, .cursorrules, project-level instructions. Write a config that fixes three recurring agent mistakes in your repo.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 20</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>07</strong></div>
+          <div class="day-content">
+            <div class="day-title">Code Generation Patterns</div>
+            <div class="day-desc">Scaffolding, boilerplate, end-to-end CRUD generation. Build the same CRUD API with three tools and compare the diffs.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 21</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>08</strong></div>
+          <div class="day-content">
+            <div class="day-title">Refactoring with AI, Safely</div>
+            <div class="day-desc">Test-first refactoring, the "small steps" pattern, where AI breaks at scale. Refactor a 500-line function in five incremental edits.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 22</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>09</strong></div>
+          <div class="day-content">
+            <div class="day-title">Debugging with AI</div>
+            <div class="day-desc">Stack trace reasoning, "show me what changed", root-cause-first. Debug three real bugs in an open-source project.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 23</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>10</strong></div>
+          <div class="day-content">
+            <div class="day-title">Testing with AI</div>
+            <div class="day-desc">Unit test generation, edge cases, mutation testing, TDD with agents. Get to 90% coverage and verify the tests catch real regressions.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 24</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>11</strong></div>
+          <div class="day-content">
+            <div class="day-title">Multi-File Edits and Agentic Workflows</div>
+            <div class="day-desc">Plan-then-execute, agent loops, tool use, when to step in. Build a small migration agent end-to-end.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 25</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>12</strong></div>
+          <div class="day-content">
+            <div class="day-title">Code Review with AI</div>
+            <div class="day-desc">Diff review, security review, style review. AI as second reviewer vs. AI as primary, with five real PRs scored against a human reviewer.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 26</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>13</strong></div>
+          <div class="day-content">
+            <div class="day-title">Evaluating AI Coding Tools</div>
+            <div class="day-desc">SWE-bench, HumanEval, custom evals. Build a 20-question eval that distinguishes three tools on tasks that match your work.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 27</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>14</strong></div>
+          <div class="day-content">
+            <div class="day-title">Production Patterns and Anti-Patterns</div>
+            <div class="day-desc">When to use, when not to, the architecture of teams that ship more with AI. Capstone: measure your own AI-assisted productivity over a week.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 28</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="closing">
+      <p><strong>How to use this course:</strong> read the lesson, run every lab, write down what surprised you. The labs are the load-bearing piece. Skipping them and reading the prose will give you opinions to repeat at parties; running them will give you taste.</p>
+      <p><strong>What you will need:</strong> a laptop with at least 16GB RAM, accounts on the relevant tools (most have free tiers), a small open-source repo to experiment in, and the discipline to actually measure things rather than vibe-check them.</p>
+      <p><strong>Cadence:</strong> one lesson published per day at this URL. Bookmark it. New days appear at the top of the grid as they ship.</p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>
