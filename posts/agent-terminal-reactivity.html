@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How Coding Agents Actually React to Terminal Output | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --output-bg: #fbfbf9; --cell-border: #ddddd8; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body h4 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 22px; margin: 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+
+    .nb-cell { margin: 32px 0; border: 1px solid var(--cell-border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+    .nb-cell pre { border: none; border-radius: 0; margin: 0; }
+    .nb-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--cell-border); display: flex; justify-content: space-between; align-items: center; }
+    .nb-label .nb-tag { color: var(--text); font-weight: 500; }
+    .nb-output { padding: 18px 22px; background: var(--output-bg); border-top: 1px solid var(--cell-border); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7; color: #2a2a28; white-space: pre; overflow-x: auto; }
+
+    table.nb-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px; }
+    table.nb-table th, table.nb-table td { border: 1px solid var(--cell-border); padding: 10px 14px; text-align: left; vertical-align: top; }
+    table.nb-table th { background: var(--bg); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.04em; }
+    table.nb-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; }
+
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">Agent Engineering</p>
+      <h1 class="post-title">How Coding Agents Actually React to Terminal Output</h1>
+      <div class="post-meta">
+        <span>May 11, 2026</span>
+        <span class="dot"></span>
+        <span>22 min read</span>
+        <span class="dot"></span>
+        <span>Hands-on</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Agents</span>
+        <span class="tag">Tool Use</span>
+        <span class="tag">PTY</span>
+        <span class="tag">Bash</span>
+        <span class="tag">Reactive Control</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>The thing that distinguishes a real coding agent from a glorified prompt-completer is what it does with terminal output. Anyone can wire an LLM to a <code>subprocess.run</code> call and feed the result back into the prompt. That works for the first ten commands and then quietly falls apart, because the terminal is a much weirder I/O surface than people remember, and "feed the output back" is doing more work in that sentence than it can carry. The interesting engineering is in how the agent <em>reacts</em>: when to stream, when to truncate, when to re-prompt, when to give up, when to ask, when to silently retry.</p>
+
+      <p>This post is a teardown of that reactive layer, drawn from building it (and watching it break) inside a couple of agent products and from spending too much time staring at why a perfectly capable model would loop forever on a command that any human would have killed in two seconds. The right mental model is not "tool use." It is closed-loop control. The agent is a controller, the terminal is the plant, and the output is the feedback signal. Most of the failure modes are what you would expect from a controller with a noisy, partially observable, latency-jittered sensor.</p>
+
+      <h2>The Naive Pattern, and Why It Stops Working</h2>
+
+      <p>The starting point for almost every agent that has ever shipped is some version of this:</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">naive_bash.py</span><span>the pattern that breaks</span></div>
+<pre><code>def bash(cmd: str, timeout: int = 60) -&gt; dict:
+    p = subprocess.run(
+        ["bash", "-lc", cmd],
+        capture_output=True, text=True, timeout=timeout,
+    )
+    return {
+        "stdout": p.stdout,
+        "stderr": p.stderr,
+        "exit_code": p.returncode,
+    }
+</code></pre>
+      </div>
+
+      <p>This is fine for <code>ls</code>, <code>cat README.md</code>, and <code>echo hello</code>. It breaks the moment the agent runs anything real. Five things go wrong, in escalating severity.</p>
+
+      <p><strong>The output is huge.</strong> A test suite, a build log, an <code>npm install</code>, a <code>terraform plan</code>, anything that touches a real codebase produces tens of thousands of lines. Dumping that into the model's context wastes tokens, evicts more useful information, and routinely pushes the model past the point where it can reason coherently. The agent ends up "summarising" output it has not actually understood.</p>
+
+      <p><strong>The output is full of escape codes.</strong> Most CLIs detect a TTY and emit ANSI colour sequences, cursor-movement codes, and progress-bar carriage returns when one is attached. Pipe their output to <code>capture_output</code> and many of them switch off colours, but a stubborn fraction (Cargo, ESLint with certain configs, anything wrapping <code>indicatif</code>, recent versions of <code>npm</code> with <code>--color=always</code> in CI configs) emit the codes anyway. The model sees <code>\x1b[1;32m✓\x1b[0m</code> instead of a checkmark, and worse, it sees a screen of <code>\r\x1b[K</code> sequences from a progress bar that visually rendered as one updating line but textually expanded into a thousand.</p>
+
+      <p><strong>The command hangs on an interactive prompt.</strong> <code>sudo</code> wants a password. <code>git push</code> wants a passphrase. <code>npm init</code> wants you to confirm fifteen defaults. Without a TTY, some of these silently wait forever; others fail with errors that do not say "I needed input." The naive wrapper either times out (losing all the work the command did before the prompt) or hangs the agent loop entirely.</p>
+
+      <p><strong>The command finishes but the exit code lies.</strong> <code>grep</code> returns 1 when it finds nothing, which is not a failure. <code>diff</code> returns 1 when files differ, which is the answer. <code>make</code> returns 0 even when the underlying compiler emitted warnings the user wanted treated as errors. Treating exit-code-zero as success and non-zero as failure is the agent's default and it is wrong often enough to matter.</p>
+
+      <p><strong>The command is long-running and the agent is blocked.</strong> Running <code>pytest</code> on a real test suite, <code>docker build</code>, <code>cargo build --release</code>, anything that takes a minute, blocks the main agent loop. The model cannot do anything else, including answering "are you still working on this?" Worse, if the user wants to redirect or cancel, there is no surface to do it on.</p>
+
+      <p>Each of these is independently survivable. The problem is that they compound. A real coding agent runs a hundred commands per session and any individual one of them can hit any of these failure modes. The reactive layer exists to handle them at the system level rather than asking the model to reason about them every single time.</p>
+
+      <h2>The Right Architecture, in Five Pieces</h2>
+
+      <p>What follows is the architecture I have converged on across several agent builds. None of the individual pieces are clever. The combination is what gives the model a sensor it can actually trust.</p>
+
+      <h3>1. Streaming execution with line-buffered capture</h3>
+
+      <p>Replace <code>subprocess.run</code> with a streaming reader that emits lines as they appear. This unblocks two things at once: the agent can react to early output without waiting for completion, and you can attach a watcher that detects the failure modes above as they happen rather than after the fact.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">streamer.py</span><span>line-buffered execution with watchers</span></div>
+<pre><code>import asyncio, signal, time
+from collections import deque
+
+async def stream_bash(cmd: str, *, timeout=600, max_lines=4000,
+                      watchers=()):
+    proc = await asyncio.create_subprocess_exec(
+        "bash", "-lc", cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,   # interleave preserves ordering
+        env={**os.environ, "TERM": "dumb",  # discourage ANSI codes
+             "NO_COLOR": "1", "CI": "1",
+             "PAGER": "cat", "GIT_PAGER": "cat",
+             "DEBIAN_FRONTEND": "noninteractive"},
+    )
+    head, tail = [], deque(maxlen=200)
+    n_lines = 0
+    started = time.monotonic()
+    early_exit = None
+
+    async for raw in proc.stdout:
+        line = raw.decode("utf-8", "replace").rstrip("\n")
+        n_lines += 1
+        (head if n_lines &lt;= 200 else tail).append(line)
+
+        for w in watchers:
+            verdict = w(line)
+            if verdict == "kill":
+                proc.send_signal(signal.SIGTERM)
+                early_exit = w.reason
+                break
+
+        if time.monotonic() - started &gt; timeout:
+            proc.send_signal(signal.SIGTERM); early_exit = "timeout"; break
+
+    code = await proc.wait()
+    return {
+        "exit_code": code,
+        "head": head,
+        "tail": list(tail),
+        "n_lines": n_lines,
+        "early_exit": early_exit,
+        "elapsed": time.monotonic() - started,
+    }
+</code></pre>
+      </div>
+
+      <p>Three details in that snippet pull more weight than they look. First, <code>TERM=dumb</code> plus <code>NO_COLOR=1</code> plus <code>CI=1</code> is the ritual incantation that disables colours and progress bars in roughly 95% of modern CLIs. The remaining 5% need a postprocessor (next section). Second, <code>stderr=STDOUT</code> interleaves the streams in their natural temporal order. The alternative, capturing them separately and reconstructing the order, is impossible in general because the OS does not promise it. Third, <code>head + tail</code> is the right summarisation primitive: keep the first 200 lines (where the command's intent and configuration live) and the last 200 (where errors and results live). Discarding the middle is almost always correct.</p>
+
+      <h3>2. PTY allocation when the command needs it</h3>
+
+      <p>For commands that misbehave when stdout is a pipe (some test runners, some build tools, any program that calls <code>isatty</code> and then refuses to do its job), you need an actual pseudo-terminal. The agent should pick: pipe by default, PTY when the command is on a known list or when a first-attempt pipe execution returned a tell-tale "stdout is not a tty" error.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">pty_runner.py</span><span>fallback to PTY</span></div>
+<pre><code>import pty, os, select, errno
+
+def run_with_pty(cmd, timeout=600):
+    pid, fd = pty.fork()
+    if pid == 0:
+        os.execvp("bash", ["bash", "-lc", cmd])
+
+    output = bytearray()
+    deadline = time.monotonic() + timeout
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining &lt;= 0:
+            os.kill(pid, signal.SIGTERM); break
+        r, _, _ = select.select([fd], [], [], min(remaining, 0.5))
+        if not r:
+            continue
+        try:
+            chunk = os.read(fd, 65536)
+        except OSError as e:
+            if e.errno == errno.EIO: break    # child closed PTY
+            raise
+        if not chunk: break
+        output.extend(chunk)
+        # detect interactive prompt patterns and abort early
+        if INTERACTIVE_PROMPT_RE.search(chunk[-256:]):
+            os.kill(pid, signal.SIGTERM)
+            return {"early_exit": "needs_input",
+                    "tail": output[-2000:].decode("utf-8", "replace")}
+
+    _, status = os.waitpid(pid, 0)
+    return {"exit_code": os.WEXITSTATUS(status),
+            "raw": bytes(output)}
+</code></pre>
+      </div>
+
+      <p>The PTY path is more expensive and the output is full of terminal control sequences, so the agent should not use it by default. But when it is needed, nothing else works.</p>
+
+      <h3>3. ANSI and progress-bar normalisation</h3>
+
+      <p>Whatever you capture, sanitise it before the model sees it. The two transformations that matter are stripping ANSI escape sequences and collapsing carriage-return progress bars into a single representative line.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">sanitize.py</span><span>output normalisation</span></div>
+<pre><code>import re
+
+# CSI sequences (colour, cursor, erase, etc.) plus OSC and a few singletons
+ANSI_RE = re.compile(
+    r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07|\x1b[PX^_].*?\x1b\\")
+
+# A line containing CRs is a progress bar; keep only the last carriage return
+# segment, which is the final state of that "line" before it advanced.
+def collapse_progress(line: str) -&gt; str:
+    if "\r" not in line: return line
+    return line.rsplit("\r", 1)[-1]
+
+def sanitise(stream: bytes | str) -&gt; str:
+    if isinstance(stream, bytes):
+        stream = stream.decode("utf-8", "replace")
+    stream = ANSI_RE.sub("", stream)
+    return "\n".join(collapse_progress(l) for l in stream.split("\n"))
+</code></pre>
+      </div>
+
+      <p>Without this step, the model's context window fills with noise and its instruction-following degrades visibly. With it, a 12,000-line <code>npm install</code> output collapses to about 60 meaningful lines, which the model can actually reason over.</p>
+
+      <h3>4. Background execution and event-driven re-entry</h3>
+
+      <p>For long-running commands, the agent should not block. The right primitive is "start in background, return a handle, notify when something changes." Concretely: a <code>run_in_background</code> tool that returns a process ID, and a notification channel that surfaces output (errors, completion) back into the agent loop as soon as it is meaningful.</p>
+
+      <p>This is the architecture Claude Code uses for long-running shells, and the architecture every serious agent eventually arrives at. The reason is asymmetry: most commands are short and can be awaited inline; a few are long and would otherwise destroy the user experience. The system needs to handle both shapes without forcing the model to reason about which is which.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">background.py</span><span>fire-and-monitor</span></div>
+<pre><code>JOBS: dict[str, asyncio.Task] = {}
+EVENTS: asyncio.Queue = asyncio.Queue()
+
+async def run_in_background(cmd: str, *, watchers=()):
+    job_id = secrets.token_hex(4)
+
+    async def _run():
+        # same streamer as before, but emit events instead of returning
+        async for line in stream_lines(cmd):
+            for w in watchers:
+                if w(line):
+                    await EVENTS.put({"job": job_id, "kind": w.kind,
+                                      "line": line})
+        await EVENTS.put({"job": job_id, "kind": "done"})
+
+    JOBS[job_id] = asyncio.create_task(_run())
+    return {"job_id": job_id, "status": "started"}
+
+async def monitor(job_id: str, until: callable, timeout=300):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() &lt; deadline:
+        ev = await asyncio.wait_for(EVENTS.get(),
+                                    timeout=deadline - time.monotonic())
+        if ev["job"] != job_id: continue
+        if until(ev): return ev
+    return {"timeout": True}
+</code></pre>
+      </div>
+
+      <p>The agent's prompt is told two things: (a) a job is running in the background, here is its handle, and (b) you will be notified when it produces a noteworthy event (completion, an error pattern match, a stall). The model can carry on with other work in the meantime. This is the single largest UX win in modern coding agents and the single most underestimated piece of system design.</p>
+
+      <h3>5. Output-conditional re-prompting</h3>
+
+      <p>Now the reactive piece proper. After every command finishes, the runner inspects the output for patterns that warrant model attention. The patterns are deliberately conservative; the agent should not be re-prompted for noise, only for things that actually change what it should do next.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">react.py</span><span>output-driven dispatch</span></div>
+<pre><code>PATTERNS = [
+    ("module_not_found", re.compile(
+        r"(ModuleNotFoundError: No module named '(?P&lt;m&gt;[\w.]+)'"
+        r"|Cannot find module '(?P&lt;n&gt;[\w@/-]+)'"
+        r"|error\[E0432\]: unresolved import `(?P&lt;r&gt;[\w:]+)`)")),
+    ("permission_denied", re.compile(
+        r"(Permission denied|EACCES|EPERM)")),
+    ("auth_required", re.compile(
+        r"(Authentication required|Please authenticate|"
+        r"401 Unauthorized|fatal: could not read Username)")),
+    ("port_in_use", re.compile(
+        r"(EADDRINUSE|address already in use|bind: address already in use)")),
+    ("compiler_error", re.compile(
+        r"(error: |error\[E\d+\]:|TS\d{4}: |SyntaxError: )")),
+    ("test_failure", re.compile(
+        r"(FAILED|failures?:|✗|×|AssertionError)", re.I)),
+    ("oom", re.compile(
+        r"(out of memory|killed|OOMKilled|MemoryError)", re.I)),
+    ("rate_limited", re.compile(
+        r"(429|rate limit|too many requests)", re.I)),
+]
+
+def classify(text: str) -&gt; list[str]:
+    return [name for name, pat in PATTERNS if pat.search(text)]
+
+REACTIONS = {
+    "module_not_found": "Install the missing dependency, then retry.",
+    "permission_denied": ("Stop. The command needs elevated permissions or "
+                          "a path the user owns. Surface this to the user "
+                          "rather than retrying."),
+    "auth_required": ("Stop. Ask the user for the credential or how to "
+                      "authenticate. Do not store secrets."),
+    "port_in_use": ("Find and stop the process holding the port, "
+                    "or pick a different port."),
+    "compiler_error": ("Read the file at the reported location, fix the "
+                       "specific error, recompile."),
+    "test_failure": ("Read the failing test and the code under test. "
+                     "Determine whether the test or the code is wrong."),
+    "oom": "Stop. Investigate memory usage rather than blindly retrying.",
+    "rate_limited": "Back off with jitter. Do not retry inside this turn.",
+}
+
+def annotate_for_model(result: dict) -&gt; dict:
+    text = "\n".join(result["head"] + ["..."] + result["tail"])
+    detected = classify(text)
+    return result | {
+        "detected_conditions": detected,
+        "suggested_reactions": [REACTIONS[d] for d in detected],
+    }
+</code></pre>
+      </div>
+
+      <p>The detection is heuristic and it is meant to be. The point is not to <em>handle</em> the conditions in code; it is to surface them clearly so the model's next turn is grounded in what actually happened rather than in whatever the model would have inferred from a sea of log lines. A model that sees <code>"detected_conditions": ["permission_denied"]</code> at the top of its tool result is dramatically less likely to retry the command in a loop than one that has to extract that conclusion from line 4,200 of a stack trace.</p>
+
+      <div class="callout">
+        <p><strong>The pattern, stated baldly:</strong> the runner is a controller. It takes raw output, applies a sanitiser, applies a classifier, and produces a structured result the model can act on. The model is not asked to be the controller; it is asked to make decisions inside one.</p>
+      </div>
+
+      <h2>Self-Healing Loops</h2>
+
+      <p>The five pieces above are the skeleton. The thing the agent does on top of them is the part that actually feels intelligent. Three loops show up over and over.</p>
+
+      <h3>The compile-error loop</h3>
+
+      <p>Every coding agent has some version of this. Run the build. If it fails, read the source file at the reported error location, propose a minimal fix, write it, run the build again. The interesting engineering is in stopping conditions: how many iterations are too many, when does the agent escalate to the user, how does it avoid the failure mode where every iteration trades one error for two new ones.</p>
+
+      <p>The trick is to track <em>error fingerprints</em> across iterations. If iteration N produces an error whose fingerprint matches iteration N-1's error, the loop is not converging and should escalate. If the fingerprint set strictly shrinks each iteration, the agent is making progress and can continue. If new fingerprints appear, the agent should be cautious because its last edit introduced regressions.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">compile_loop.py</span><span>convergence-aware retry</span></div>
+<pre><code>def fingerprint(line: str) -&gt; str:
+    # collapse line/column numbers and quoted spans
+    s = re.sub(r":\d+(:\d+)?", ":N", line)
+    s = re.sub(r"'[^']{1,80}'", "'X'", s)
+    return s.strip()
+
+def converging(prev: set, curr: set) -&gt; bool:
+    return curr &lt; prev and len(curr) &lt; len(prev)
+
+prev_fp = set()
+for attempt in range(MAX_ATTEMPTS):
+    out = await stream_bash(BUILD_CMD)
+    if out["exit_code"] == 0: break
+    curr_fp = {fingerprint(l) for l in out["tail"] if "error" in l.lower()}
+    if attempt &gt; 0 and not converging(prev_fp, curr_fp):
+        await escalate("Build is not converging; surfacing to user.",
+                       errors=curr_fp)
+        break
+    prev_fp = curr_fp
+    await model_propose_and_apply_fix(out)
+</code></pre>
+      </div>
+
+      <h3>The test-failure loop</h3>
+
+      <p>Same shape, more failure modes. The first decision the agent must make is: <em>is the test wrong, or is the code wrong?</em> Most agents default to "the code is wrong" and start editing application code in response to a test that was never going to pass anyway. The mitigation is a small triage step: read the test, read the code under test, ask the model explicitly which side has the bug before making any edits. Without this triage, the loop produces beautiful, plausible code changes that reliably make the symptoms go away by removing the assertions instead of fixing the bug.</p>
+
+      <h3>The dependency loop</h3>
+
+      <p>A command fails with <code>ModuleNotFoundError</code> or <code>Cannot find module</code> or <code>error[E0432]: unresolved import</code>. The reaction policy installs the missing dependency and retries. This is the most retryable class of failure, and the agent should handle it without bothering the user, with two safeties: never install across major-version boundaries without confirmation, and never install a name that does not match the import path closely enough (this is a known prompt-injection vector and a real source of supply-chain bugs).</p>
+
+      <h2>What This Looks Like End-to-End</h2>
+
+      <p>The cleanest way to show the architecture working is a small replay of a real session. The user asks the agent to run the test suite. The agent dispatches <code>pytest</code> in the background, gets streaming output, hits a missing dependency, installs it, retries, and then surfaces a real test failure to the user without going on a fix-it spree.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">trace</span><span>session log (annotated)</span></div>
+<pre><code>[t=0.00s] tool: run_in_background
+  cmd: pytest -x --tb=short tests/
+  -&gt; { job_id: "ab12", status: "started" }
+
+[t=2.30s] event(ab12, kind="error_pattern")
+  line: ModuleNotFoundError: No module named 'pydantic'
+  detected_conditions: ["module_not_found"]
+  suggested_reactions: ["Install the missing dependency, then retry."]
+
+[t=2.32s] tool: bash
+  cmd: pip install -q pydantic
+  exit_code: 0  | head: ["Successfully installed pydantic-2.9.2"]
+
+[t=4.10s] tool: run_in_background
+  cmd: pytest -x --tb=short tests/
+  -&gt; { job_id: "ab13", status: "started" }
+
+[t=27.4s] event(ab13, kind="done")
+  exit_code: 1
+  detected_conditions: ["test_failure"]
+  tail (sanitised, last 12 lines):
+    FAILED tests/test_billing.py::test_pro_rated_refund - AssertionError
+    assert refund == Decimal("12.50")
+    assert refund == Decimal("12.5012345678901234567890")
+    1 failed, 47 passed in 22.81s
+
+[t=27.5s] model decision:
+  "Triage required: read test_billing.py and billing.py to determine
+   whether the rounding is wrong in the test's expected value or in the
+   refund computation. Will not edit until triage is complete."
+
+[t=27.6s] tool: read tests/test_billing.py [...]
+[t=27.9s] tool: read src/billing.py [...]
+[t=29.4s] model output:
+  "The bug is in src/billing.py: refund_amount is computed in full
+   precision but should be quantised to cents (ROUND_HALF_EVEN). The
+   test's expected value of Decimal('12.50') is correct. Proposed fix:
+   add .quantize(Decimal('0.01'), ROUND_HALF_EVEN) before returning."
+</code></pre>
+      </div>
+
+      <p>The thing this trace illustrates is the division of labour. The streaming runner does the I/O. The classifier flags the conditions. The reaction policy decides which conditions are auto-handleable (module not found, install and retry) and which need the model's judgement (test failure, triage before editing). The model is left to do the small number of decisions that require actual reasoning, not the large number that can be answered structurally.</p>
+
+      <h2>Failure Modes I Still See</h2>
+
+      <p>No write-up is honest unless it lists what still goes wrong. These are the recurring problems even with the architecture above in place.</p>
+
+      <p><strong>Stalls without output.</strong> A command that simply hangs (a deadlocked test, a network call that never times out, a server waiting on a connection) produces no output and therefore triggers no watcher. The mitigation is a stall detector that fires when no bytes have arrived for some duration, but tuning that threshold is annoying: too tight and you kill long-running compiles; too loose and the agent waits five minutes before noticing nothing is happening. Per-command thresholds based on a learned distribution of past runtimes work better than a global default.</p>
+
+      <p><strong>Output that confuses sanitisation.</strong> A small but real fraction of CLIs emit output that looks like ANSI escapes but is not (e.g., literal text containing <code>\x1b</code>), or that uses ANSI in ways the regex above does not cover (the OSC 8 hyperlink sequences are recent and easy to miss). The fix is to maintain the regex against a corpus of weird real-world tool outputs and treat the sanitiser as living code, not a constant.</p>
+
+      <p><strong>Interactive prompts that arrive after a delay.</strong> <code>sudo</code> may not prompt for a password if you authenticated recently. A web framework's dev server may print its banner immediately and then wait for the next change before printing anything. The "did this command want input?" detector has to combine textual prompt-pattern matching with a "no output for N seconds after the prompt" timer, and even that is fragile.</p>
+
+      <p><strong>Background-job amnesia.</strong> The model forgets that it has a background job running and never goes back to check. The fix is on the system side: surface a periodic reminder of active jobs at the top of every prompt, and force the model to acknowledge them before issuing new commands. Otherwise the agent ends up with a graveyard of orphaned servers and leaked file handles.</p>
+
+      <p><strong>Pattern matches that change the model's behaviour in unhelpful ways.</strong> A retrieval system that classifies <em>everything</em> ends up with reactions firing on noise. The classifier should err on the side of false negatives, and the patterns should be specific enough that they almost never match incidentally. A spurious "auth_required" classification on a stack trace mention of "401" can derail a session.</p>
+
+      <h2>What to Build, in What Order</h2>
+
+      <p>If you are building this from scratch, the order I recommend is:</p>
+
+      <ol>
+        <li>Streaming line-buffered execution with <code>head + tail</code> truncation. Do not start with the rest until this is solid; almost every other failure mode is easier to debug when you can see the output as it streams.</li>
+        <li>The environment-variable incantation (<code>TERM=dumb</code>, <code>NO_COLOR=1</code>, <code>CI=1</code>, <code>PAGER=cat</code>, <code>DEBIAN_FRONTEND=noninteractive</code>). Set these at the runner level so the model never thinks about them.</li>
+        <li>ANSI and progress-bar sanitisation. Until you have this, you cannot trust any classifier downstream because the input is full of garbage.</li>
+        <li>The classifier with the small, specific pattern set. Keep it short. Add patterns only when you see a real failure mode in production.</li>
+        <li>Background execution with event-driven re-entry. This unlocks the long-running command UX. Do not skip it; the difference in user experience is enormous.</li>
+        <li>PTY fallback for the small number of commands that need it. Last because it is rarely needed and adds complexity.</li>
+        <li>The convergence-aware compile and test loops, with explicit triage before edits. This is the reasoning piece and it benefits from all of the above being solid.</li>
+      </ol>
+
+      <p>The pattern that wins is to keep the model's job as small as possible. The runner is a controller; the model is asked to make the few decisions that are genuinely model-shaped. Every time you push a decision into the runner that does not need the model's judgement, the agent gets faster, cheaper, and more reliable. Every time you push a decision into the model that the runner could have made structurally, you get an agent that is impressive in the demo and frustrating in production.</p>
+
+      <p>The terminal is a strange sensor. Treat it that way, build the conditioning layer that closes the loop, and the agent stops feeling like a chatbot with a shell and starts feeling like a colleague who is paying attention.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="../index.html#contact">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>
