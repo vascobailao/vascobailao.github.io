@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Day 2: Responsible AI for Coding Tools | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --output-bg: #fbfbf9; --cell-border: #ddddd8; --lab-bg: #fffdf6; --lab-border: #e8dfb8; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .crumb { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px; }
+    .crumb a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+    .crumb a:hover { color: var(--text); border-bottom-color: var(--text); }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body h4 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 22px; margin: 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+
+    .nb-cell { margin: 32px 0; border: 1px solid var(--cell-border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+    .nb-cell pre { border: none; border-radius: 0; margin: 0; }
+    .nb-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--cell-border); display: flex; justify-content: space-between; align-items: center; }
+    .nb-label .nb-tag { color: var(--text); font-weight: 500; }
+    .nb-output { padding: 18px 22px; background: var(--output-bg); border-top: 1px solid var(--cell-border); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7; color: #2a2a28; white-space: pre; overflow-x: auto; }
+
+    table.nb-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13.5px; }
+    table.nb-table th, table.nb-table td { border: 1px solid var(--cell-border); padding: 9px 12px; text-align: left; vertical-align: top; }
+    table.nb-table th { background: var(--bg); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; }
+    table.nb-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; }
+
+    .lab { margin: 40px 0; padding: 28px 32px; background: var(--lab-bg); border: 1px solid var(--lab-border); border-radius: 8px; }
+    .lab-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+    .lab-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a6f00; background: #fff7d6; border: 1px solid #e8dfb8; padding: 4px 10px; border-radius: 4px; }
+    .lab-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+    .lab-title { font-size: 19px; font-weight: 500; letter-spacing: -0.005em; margin-bottom: 14px; }
+    .lab-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+    .lab p { margin-bottom: 16px; font-size: 15px; line-height: 1.75; }
+    .lab ul, .lab ol { margin: 0 0 16px 22px; }
+    .lab li { font-size: 15px; line-height: 1.7; margin-bottom: 8px; }
+    .lab .nb-cell { margin: 18px 0; }
+    .lab-deliv { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--lab-border); }
+    .lab-deliv-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a6f00; margin-bottom: 6px; }
+    .lab-deliv p { font-size: 14.5px; margin-bottom: 0; }
+
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } .lab { padding: 22px 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../../index.html">vasco fernandes</a>
+      <a class="nav-back" href="index.html">← course index</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="crumb"><a href="index.html">AI Coding Tools Course</a> / Day 02</p>
+      <p class="post-label">Day 2 of 14 / Hands-on / 5 labs</p>
+      <h1 class="post-title">Responsible AI for Coding Tools: A Network-Audit Approach</h1>
+      <div class="post-meta">
+        <span>May 16, 2026</span>
+        <span class="dot"></span>
+        <span>~120 min including labs</span>
+        <span class="dot"></span>
+        <span>5 labs</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Course</span>
+        <span class="tag">Security</span>
+        <span class="tag">mitmproxy</span>
+        <span class="tag">Data Flow</span>
+        <span class="tag">Self-Hosted</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>Day 1 was the lay of the land. Day 2 is where most engineers get stopped from adopting AI tools at work, and where most adoption decisions go wrong because the answer to "is this safe?" gets outsourced to the legal team's reading of a privacy policy. That is the wrong process. Privacy policies are written by lawyers for plausible deniability; the actual behaviour of a tool is determined by what crosses the wire, and you can observe that yourself in about an hour.</p>
+
+      <p>Today you will build a TLS-decrypting proxy, route VS Code through it, and watch in detail what each AI coding tool sends to its backend. By the end of the day you will have a per-tool data-flow diagram precise enough to satisfy a security review, evidence to back up (or contradict) the vendor's privacy claims, and a self-hosted alternative running with verified zero egress. This is the engineering version of "responsible AI." The ethics-board version is fine; this one is what actually unblocks adoption.</p>
+
+      <div class="callout">
+        <p><strong>Legal note before you start:</strong> route only your own code, on a machine you own, through your proxy. Do not capture traffic from other people's sessions or from corporate networks without authorisation. The point of this lab is to make informed decisions about tools you use; it is not to reverse-engineer vendor protocols or extract proprietary information.</p>
+      </div>
+
+      <h2>The Threat Model, Made Concrete</h2>
+
+      <p>When a security team asks "is Copilot safe?", they usually mean some combination of five questions, all of which have different answers and different evidence requirements:</p>
+
+      <ol>
+        <li><strong>Where does my code go?</strong> Which servers receive what, on which endpoints, under whose jurisdiction.</li>
+        <li><strong>How long is it kept?</strong> Retention windows for prompts, completions, and feedback, and whether retention applies to enterprise tiers.</li>
+        <li><strong>Who has access to it?</strong> Vendor staff, model trainers, downstream subprocessors, government requests.</li>
+        <li><strong>Could it train future models?</strong> The "no training on your data" claim is only as strong as the audit trail behind it.</li>
+        <li><strong>Could it leak into someone else's output?</strong> The infamous "Copilot suggested someone else's GPL code" failure mode, which is a matter of public-code matching and licence detection, not training.</li>
+      </ol>
+
+      <p>The privacy policies of every major vendor address all five questions. They do so in language that is technically true and operationally ambiguous. The way you get past the ambiguity is to <em>measure the behaviour</em>: capture the actual traffic, examine the request bodies, and reconcile what you see with what the vendor claims. When the two match, your security team has evidence. When they do not, you have a question to ask in writing before adoption.</p>
+
+      <h2>Why mitmproxy Is the Right Primitive</h2>
+
+      <p>The tool you want for this is <code>mitmproxy</code>. It is an open-source HTTPS proxy that installs its own certificate authority into your trust store, intercepts TLS connections originating from your machine, decrypts them, lets you inspect and modify them, then re-encrypts and forwards to the real backend. Other tools work (Burp Suite, Charles Proxy, Wireshark with SSLKEYLOGFILE), but mitmproxy has the best CLI, the cleanest Python API for scripting analyses, and a permissive licence.</p>
+
+      <p>The key thing to understand is that you are interposing yourself between your own machine and the vendor backend. Your VS Code, your OS, your CA store. You are not breaking anyone's TLS; you are installing your own root certificate that you control and trust on a machine you own.</p>
+
+      <h3>Setup, before the first lab</h3>
+
+      <p>Install once, use for all five labs.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">terminal</span><span>install mitmproxy</span></div>
+<pre><code># macOS
+brew install mitmproxy
+
+# Linux (Debian/Ubuntu)
+sudo apt install mitmproxy
+
+# Or via pipx, which works everywhere
+pipx install mitmproxy
+
+# Start it once to generate the CA cert at ~/.mitmproxy/
+mitmproxy
+# (press q to quit)
+ls ~/.mitmproxy/
+# mitmproxy-ca-cert.pem   mitmproxy-ca.p12   mitmproxy-ca.pem   ...
+</code></pre>
+      </div>
+
+      <p>Now trust the CA so HTTPS interception works. The exact command differs by OS.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">terminal</span><span>trust the CA (macOS)</span></div>
+<pre><code># macOS: import into the system keychain
+sudo security add-trusted-cert -d -p ssl -p basic \
+  -k /Library/Keychains/System.keychain \
+  ~/.mitmproxy/mitmproxy-ca-cert.pem
+
+# Verify it landed
+security find-certificate -c mitmproxy /Library/Keychains/System.keychain
+</code></pre>
+      </div>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">terminal</span><span>trust the CA (Linux)</span></div>
+<pre><code># Linux (Debian/Ubuntu): copy to the system CA bundle
+sudo cp ~/.mitmproxy/mitmproxy-ca-cert.pem \
+        /usr/local/share/ca-certificates/mitmproxy.crt
+sudo update-ca-certificates
+
+# Verify
+awk -v cmd='openssl x509 -noout -subject' '/BEGIN/{close(cmd)};{print | cmd}' \
+  /etc/ssl/certs/ca-certificates.crt | grep -i mitmproxy
+</code></pre>
+      </div>
+
+      <p>You also need Node.js to trust it, because VS Code's extensions make their own HTTPS calls through Node and Node has its own CA bundle.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">terminal</span><span>point Node and VS Code at the CA</span></div>
+<pre><code># Make Node trust the CA bundle on every invocation
+export NODE_EXTRA_CA_CERTS="$HOME/.mitmproxy/mitmproxy-ca-cert.pem"
+# Persist this in your shell rc so VS Code's terminal inherits it.
+
+# Launch VS Code with the proxy set
+export HTTPS_PROXY="http://127.0.0.1:8080"
+export HTTP_PROXY="http://127.0.0.1:8080"
+code .
+
+# In another terminal, start mitmweb (web UI on :8081)
+mitmweb --listen-port 8080
+</code></pre>
+      </div>
+
+      <p>At this point you have a proxy listening on 8080, a UI on 8081, and VS Code routed through it. Open the UI in a browser, go to <code>http://127.0.0.1:8081</code>, and you should see HTTPS traffic flowing as you interact with VS Code. If you do not, your environment variables are not making it to VS Code; restart your terminal and the editor.</p>
+
+      <p>One last thing: some tools pin their certificate (Cody historically did, Copilot occasionally does for specific endpoints). If you see <code>SSL: certificate verify failed</code> in the tool's logs, that tool has pinning enabled and you will have to use mitmproxy's <code>--ssl-insecure</code> mode for capture and skip the lab's interception step for that specific connection. Note this in your audit report.</p>
+
+      <h2>The Labs</h2>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 01</span>
+          <span class="lab-num">~25 min</span>
+        </div>
+        <h3 class="lab-title">Capture and dissect a single tab-completion request</h3>
+        <p class="lab-meta">Tools: any inline-completion tool of your choice. Difficulty: medium.</p>
+
+        <p>You will trigger one ghost-text completion and read exactly what the tool sends. This is the foundation lab; every subsequent one builds on it.</p>
+
+        <h4>Procedure</h4>
+        <ol>
+          <li>With mitmproxy running and VS Code routed through it, open an empty <code>.py</code> file in your test repo.</li>
+          <li>In the mitmweb UI, click the broom icon to clear current flows.</li>
+          <li>Type <code>def fibonacci(n: int) -&gt; int:</code> and press Enter. Wait for the ghost text to appear.</li>
+          <li>Press Escape to dismiss it (do not accept; we just want the request).</li>
+          <li>In mitmweb, find the request to the tool's completion endpoint. Common patterns: <code>api.githubcopilot.com/copilot_internal/v2/engines/copilot-codex/completions</code> for Copilot, <code>api2.cursor.sh</code> or <code>repo42.cursor.sh</code> for Cursor, <code>codeium.com</code> for Codeium.</li>
+          <li>Click the request. Switch to the "Request" pane. Read the headers and body in full.</li>
+        </ol>
+
+        <h4>What to look for</h4>
+        <ul>
+          <li>The <strong>endpoint URL</strong> and HTTP method. Note the path; this is where your code is going.</li>
+          <li><strong>Authentication header</strong>. Bearer token? Custom header? Note its shape, never the value.</li>
+          <li><strong>Body format</strong>. JSON? Protobuf? gRPC over HTTP/2? The format determines how easy it is to audit.</li>
+          <li><strong>Prefix and suffix</strong> fields. How much of your file did it send? Just the current line? The whole file? Surrounding files?</li>
+          <li><strong>Repository/file metadata</strong>. Did it send a file path? Branch name? Git remote URL?</li>
+          <li><strong>Headers identifying the user, machine, or organisation</strong>. Telemetry ID? Session ID? Editor version?</li>
+        </ul>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">expected (Copilot, redacted)</span><span>shape of one completion request</span></div>
+<pre><code>POST https://api.githubcopilot.com/copilot_internal/v2/engines/.../completions
+Headers:
+  Authorization: Bearer ghu_REDACTED
+  Editor-Version: vscode/1.94.0
+  Editor-Plugin-Version: copilot/1.245.0
+  Openai-Organization: github-copilot
+  VScode-MachineId: REDACTED
+  VScode-SessionId: REDACTED/REDACTED
+
+Body (JSON):
+{
+  "prompt": "# Path: scratch.py\ndef fibonacci(n: int) -&gt; int:\n",
+  "suffix": "",
+  "max_tokens": 500,
+  "temperature": 0,
+  "top_p": 1,
+  "n": 1,
+  "stop": ["\n\n\n"],
+  "nwo": "your-github-username/your-repo",
+  "stream": true,
+  "extra": { "language": "python", "next_indent": 4 ... }
+}
+</code></pre>
+        </div>
+
+        <p>Note specifically the <code>nwo</code> field. That stands for "name-with-owner" and identifies the repository. If your file is inside a private repo you did not realise the tool would identify, this is the data point that proves it does.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A single-page markdown note per tool, listing: endpoint URL, body schema (with field-by-field annotation), any identifiers transmitted, and one specific surprise (there will be at least one). Keep this; you will reuse it on Day 4.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 02</span>
+          <span class="lab-num">~25 min</span>
+        </div>
+        <h3 class="lab-title">Build a per-tool data-flow diagram</h3>
+        <p class="lab-meta">Difficulty: medium. Output: a diagram you can defend to a CISO.</p>
+
+        <p>Repeat Lab 01 for three tools, then merge the findings into one diagram per tool. The diagram should answer: when I press Tab once, what data goes where, in what order, under what protocol?</p>
+
+        <p>A useful template (Mermaid format because it lives in a markdown file alongside the rest of your audit):</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">data-flow.mmd</span><span>per-tool flow template</span></div>
+<pre><code>flowchart LR
+  A[VS Code keystroke]
+  A --&gt; B[Tool extension]
+  B --&gt;|HTTPS POST<br/>JSON<br/>4kB body| C[(api.tool.com/completions)]
+  C --&gt;|streaming SSE| B
+  B --&gt; D[ghost text]
+
+  C -.->|may proxy to| E[(model provider<br/>e.g. OpenAI)]
+  C -.->|telemetry| F[(stats.tool.com)]
+
+  classDef vendor fill:#fff7d6,stroke:#8a6f00
+  classDef edge fill:#f0f0ed
+  class C,E,F vendor
+  class A,B,D edge
+</code></pre>
+        </div>
+
+        <p>Fill in the body size (a real number from your capture), the protocol (HTTP/2? HTTP/1.1?), and the response style (SSE stream? single JSON?). Then mark every node with the jurisdiction of the company that operates it. <em>This is the bit that surprises people most often.</em> The frontend API may be operated by one company, the model itself by another, and the telemetry by a third. For audit purposes, all three matter.</p>
+
+        <p>Repeat for chat completions (the request body will be much larger; chat tools typically send the current file plus retrieved chunks). Repeat for agent operations if your tool supports them; this is where the volume of egress jumps by an order of magnitude.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>Three Mermaid diagrams (one per tool) in a single markdown file, each with annotated edges (body sizes, frequencies, protocols) and node jurisdictions. This file is the artefact that gets you past security review. Update it whenever a vendor changes its architecture.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 03</span>
+          <span class="lab-num">~30 min</span>
+        </div>
+        <h3 class="lab-title">Probe the public-code-matching defence</h3>
+        <p class="lab-meta">Difficulty: medium-hard. Tests vendor claims with adversarial input.</p>
+
+        <p>Most major vendors claim a "public code filter" that prevents the model from regurgitating verbatim copies of indexed public code. The claim is reasonable; the question is whether it actually works under realistic conditions. You will test it directly.</p>
+
+        <h4>Setup</h4>
+        <p>Pick a function from a well-known open-source repository. Something distinctive but not in the model's likely training corpus enough to be memorised by name. A good target: a non-trivial helper from a mid-popularity GitHub project, twenty to fifty lines, with at least one comment block that is verbatim a unique phrase.</p>
+
+        <h4>Procedure</h4>
+        <ol>
+          <li>Open an empty file. Paste the function, then delete its body, leaving the signature and the leading comment.</li>
+          <li>Position your cursor at the end of the signature. Wait for ghost text.</li>
+          <li>Capture the request (Lab 01 procedure) and the response.</li>
+          <li>Compare the suggestion to the original. Specifically: how many tokens match exactly? Does the unique comment phrase appear? Does the suggestion include the original's quirks (variable names, edge-case handling)?</li>
+          <li>If the suggestion is the same code, the public-code filter did not fire on this input. If the suggestion is similar but altered (different variable names, restructured logic), the filter fired but was applied as a "rewrite" rather than a block.</li>
+          <li>Repeat with the filter explicitly enabled or disabled where the setting is exposed (Copilot has it in user settings; document its default).</li>
+        </ol>
+
+        <h4>What you are measuring</h4>
+        <ul>
+          <li><strong>Verbatim match rate</strong>: the fraction of suggestion tokens that exactly match the original. Above 30% on a 50-token suggestion is a real signal.</li>
+          <li><strong>Filter behaviour</strong>: does the tool block, rewrite, or pass through?</li>
+          <li><strong>Latency penalty</strong>: turning on the filter often adds 100 to 300ms; measure it.</li>
+          <li><strong>License signal</strong>: some tools, post-suggestion, return a list of repositories the suggestion resembled. Does yours?</li>
+        </ul>
+
+        <p>One important caveat: this lab tests <em>recall under prompting</em>, not memorisation in the abstract. A tool that does not fire on your specific function may fire on others, and a tool that does fire may not catch a rephrased version. The point is not to prove the filter is broken; it is to characterise its behaviour precisely enough that your team knows what protection they actually have.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A markdown table with one row per tool, columns for (verbatim-match-rate, filter-behaviour, latency-penalty-ms, license-attribution-y/n) and a short note on three test inputs. Conclusion line: "for inputs of this shape, on this tool, the public-code filter behaves as follows."</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 04</span>
+          <span class="lab-num">~25 min</span>
+        </div>
+        <h3 class="lab-title">Set up a self-hosted alternative with verified zero egress</h3>
+        <p class="lab-meta">Difficulty: medium. Tools: Continue + ollama. Output: a working stack that egresses nothing.</p>
+
+        <p>The cloud tools are convenient but they are not the only option. A self-hosted stack runs the model on your machine and never makes a network call. This lab proves that with the same audit machinery you built in Lab 1.</p>
+
+        <h4>Procedure</h4>
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">terminal</span><span>install ollama and a code model</span></div>
+<pre><code># macOS / Linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Pull a code-tuned model. deepseek-coder-v2 is a good default; the
+# 6.7B variant runs on 16GB of system RAM, 16B needs a GPU.
+ollama pull deepseek-coder-v2:6.7b
+
+# Verify it serves locally
+curl http://localhost:11434/api/generate -d '{
+  "model": "deepseek-coder-v2:6.7b",
+  "prompt": "def fibonacci(n: int) -&gt; int:",
+  "stream": false
+}' | head -c 300
+</code></pre>
+        </div>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">terminal</span><span>install Continue and point it at ollama</span></div>
+<pre><code># Install the Continue VS Code extension from the marketplace.
+# Then edit ~/.continue/config.json to use ollama:
+cat &gt; ~/.continue/config.json &lt;&lt;'JSON'
+{
+  "models": [{
+    "title": "DeepSeek Coder local",
+    "provider": "ollama",
+    "model": "deepseek-coder-v2:6.7b",
+    "apiBase": "http://localhost:11434"
+  }],
+  "tabAutocompleteModel": {
+    "title": "Tab autocomplete (local)",
+    "provider": "ollama",
+    "model": "deepseek-coder-v2:6.7b",
+    "apiBase": "http://localhost:11434"
+  },
+  "allowAnonymousTelemetry": false,
+  "telemetry": false
+}
+JSON
+</code></pre>
+        </div>
+
+        <h4>Verify zero egress</h4>
+        <p>This is the auditable claim. With mitmproxy running on 8080 and VS Code routed through it, clear the flows in mitmweb. Then use Continue: trigger a completion, run a chat query, ask it to refactor something. After five minutes of active use, look at the mitmweb flows list.</p>
+
+        <p>What you should see: HTTP requests to <code>localhost:11434</code> (your ollama server) and nothing else from the Continue extension. No <code>continue.dev</code>. No telemetry endpoints. No model providers. If you do see external traffic, the telemetry flag is being ignored or a different extension is responsible; track it down before declaring the stack airgapped.</p>
+
+        <p>For an even stronger guarantee, run this in a network namespace or container with the loopback interface only. The tightest setup uses <code>unshare -n</code> on Linux to launch a shell with no network access except loopback; ollama and VS Code happily run inside it.</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">terminal</span><span>nuclear option: no network at all</span></div>
+<pre><code># Linux only. Drops you into a shell with loopback as the only interface.
+sudo unshare -n bash -c '
+  ip link set lo up
+  echo "Interfaces in this namespace:"
+  ip addr show
+  echo
+  echo "Try to reach anything outside loopback (should fail):"
+  curl --max-time 3 https://api.github.com || echo "blocked, as expected"
+'
+</code></pre>
+        </div>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A short audit memo: "I ran X minutes of active Continue+ollama use through a TLS-decrypting proxy. The only flows captured were to localhost:11434. Conclusion: this stack has zero external egress for code content under tested workloads." Attach a screenshot of the mitmweb flow list. This is the artefact you give to security to prove the claim.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 05</span>
+          <span class="lab-num">~15 min · capstone for Day 2</span>
+        </div>
+        <h3 class="lab-title">Write a one-page security memo</h3>
+        <p class="lab-meta">Difficulty: easy. Output: the artefact that gets you adoption.</p>
+
+        <p>The labs above produced raw evidence. Most security teams do not want raw evidence; they want a one-page memo that summarises it, calls out the risks, and recommends an action. This lab writes that memo.</p>
+
+        <p>Use this template. Fill it in with your captured evidence, not vendor copy.</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">memo.md</span><span>one-page security memo template</span></div>
+<pre><code># Adoption review: AI coding tools
+
+**Reviewer:** &lt;your name&gt;
+**Date:** &lt;today&gt;
+**Scope:** Tools X, Y, Z evaluated for use on &lt;codebase&gt;.
+
+## Summary
+&lt;Two sentences. What you recommend and why.&gt;
+
+## Evidence base
+- TLS-decrypted capture of one completion, one chat, one agent
+  operation per tool (Labs 1 to 3).
+- Public-code-filter probe with three adversarial inputs (Lab 3).
+- Self-hosted alternative verified with zero-egress audit (Lab 4).
+
+## Per-tool data flow
+&lt;Insert Mermaid diagrams from Lab 2.&gt;
+
+## Findings
+
+### Tool X
+- Endpoints: ...
+- Data sent per completion: ...
+- Retention claim (from policy): ...
+- Behaviour observed: ...
+- Public-code filter: enabled by default? &lt;y/n&gt;. Verbatim-match-rate
+  on test inputs: ...%
+- Jurisdiction of operating company: ...
+- Subprocessors invoked: ...
+
+### Tool Y
+&lt;same structure&gt;
+
+### Tool Z
+&lt;same structure&gt;
+
+## Risks ranked
+
+1. **&lt;Highest risk&gt;**: &lt;one-sentence description&gt;. Affected tools: ...
+   Mitigation: ...
+2. **&lt;Second&gt;**: ...
+3. **&lt;Third&gt;**: ...
+
+## Recommendation
+- Approve Tool X for general use, on personal and non-sensitive
+  business repos.
+- Approve Tool Y only with the &lt;specific setting&gt; enabled.
+- Decline Tool Z pending response to the open question in the
+  Findings section.
+- For repositories tagged "regulated", use the self-hosted
+  Continue+ollama stack documented in Appendix A.
+
+## Open questions for vendors
+1. ...
+2. ...
+3. ...
+</code></pre>
+        </div>
+
+        <p>This memo is the deliverable that actually changes outcomes. Vendor pitches do not. Privacy policies do not. A one-page document, signed by an engineer who measured the tool's behaviour, does. Save it; you will update it on Day 14 with the productivity data from the capstone.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A completed memo, one page, suitable for sending to your security team. If you do not have a security team, send it to yourself and read it cold tomorrow; if you would accept its recommendations as a stranger, it is calibrated correctly.</p>
+        </div>
+      </div>
+
+      <h2>The Failure Modes I See Most Often</h2>
+
+      <p>Two failure modes show up over and over in real audits, both worth flagging before they catch you out.</p>
+
+      <p><strong>Telemetry that is not in the privacy policy.</strong> The completion request body is not the only thing tools send. There is almost always a separate telemetry endpoint that fires on extension activation, on every keystroke (debounced), and on every accept/reject. The data in those calls is summarised, not raw code, but it still tells the vendor what languages you use, what frameworks you import, how often you reject suggestions, and on which file paths. The privacy policy may or may not address it. Lab 1 surfaces it; do not stop at the completion endpoint.</p>
+
+      <p><strong>The "enterprise tier" assumption.</strong> Vendors often have stronger privacy guarantees on their enterprise SKUs. The trap is assuming that paying for enterprise applies the guarantees automatically. It does not, usually. There is a per-organisation setting that enables the no-training, no-retention behaviour, and it may default to off. Run Lab 1 against the actual SKU your organisation pays for; do not assume.</p>
+
+      <p>Two failure modes I see on the other side of the table:</p>
+
+      <p><strong>Security teams that reject without measurement.</strong> "No AI tools, ever" is not a security posture; it is an unwillingness to do the audit work that would allow informed adoption. Push back, kindly, with the artefact from Lab 5. The conversation shifts when there is evidence on the table.</p>
+
+      <p><strong>Engineering teams that adopt without measurement.</strong> The mirror image. "Everyone uses Copilot so we should too" is not a posture either. The same memo applies; fill it in honestly and you will discover settings you need to flip, tools you should not adopt yet, and a self-hosted fallback for the cases where the cloud is wrong.</p>
+
+      <h2>What You Should Take Away</h2>
+
+      <p><strong>Behaviour beats policy.</strong> A vendor's privacy policy is the starting point of an audit, not the conclusion. The actual data flow is observable and auditable; do the work.</p>
+
+      <p><strong>Telemetry is the part nobody talks about.</strong> Code content matters most, but the metadata stream (file types, languages, accept rates, machine IDs) is non-trivial and tells the vendor more than people realise.</p>
+
+      <p><strong>Self-hosting is a real fallback.</strong> Continue plus ollama with a 6.7B model is not as polished as Copilot, but it is correct, free, and provably airgapped. For some teams and some codebases, that is the right answer regardless of how good the cloud tools get.</p>
+
+      <p><strong>The artefact is the unlock.</strong> A one-page evidence-based memo is the difference between "we are not sure" and "we have decided." It is also the difference between a tool adoption that lasts and one that gets pulled in three months when a security incident makes everyone re-litigate the decision.</p>
+
+      <h2>Tomorrow</h2>
+
+      <p>Day 3 takes us under the hood of inline completion. We will build a working FIM (fill-in-the-middle) engine from scratch using a small open model, dissect the FIM token formats across model families, measure the full latency stack from keystroke to ghost text, and explain why a worse model with better latency wins inline. By the end you will understand exactly what Copilot and Cursor's tab models are doing, which means you will be able to reason about their failure modes and their improvements honestly.</p>
+
+      <p>Bring a machine that can run llama.cpp. A laptop with 16GB of RAM will do.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="index.html">← Course index</a>
+      <a href="../../index.html#contact">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>
