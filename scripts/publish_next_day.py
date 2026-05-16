@@ -29,7 +29,6 @@ import sys
 from pathlib import Path
 
 import yaml
-from anthropic import Anthropic
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC_PATH = ROOT / "posts" / "course" / "course-spec.yaml"
@@ -37,6 +36,7 @@ COURSE_DIR = ROOT / "posts" / "course"
 INDEX_PATH = COURSE_DIR / "index.html"
 
 MODEL = "claude-opus-4-7"
+FALLBACK_MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 16000
 
 # Hard validation bars. Generation that fails any of these is rejected.
@@ -153,17 +153,25 @@ Return ONLY the complete HTML for Day {day['day']}, starting with
 
 
 def generate(prompt: str) -> str:
+    from anthropic import Anthropic  # imported here so no-op path needs no deps
     client = Anthropic()
-    msg = client.messages.create(
-        model=MODEL,
-        max_tokens=MAX_TOKENS,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    out = "".join(b.text for b in msg.content if b.type == "text")
-    # Some models occasionally wrap in fences despite instructions
-    out = re.sub(r"^```(?:html)?\s*", "", out)
-    out = re.sub(r"\s*```$", "", out)
-    return out.strip()
+    last_err: Exception | None = None
+    for model in (MODEL, FALLBACK_MODEL):
+        try:
+            msg = client.messages.create(
+                model=model,
+                max_tokens=MAX_TOKENS,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            out = "".join(b.text for b in msg.content if b.type == "text")
+            # Some models occasionally wrap in fences despite instructions
+            out = re.sub(r"^```(?:html)?\s*", "", out)
+            out = re.sub(r"\s*```$", "", out)
+            return out.strip()
+        except Exception as e:  # NotFoundError, PermissionDeniedError, etc.
+            print(f"model {model} failed: {e}", file=sys.stderr)
+            last_err = e
+    raise SystemExit(f"all models failed; last error: {last_err}")
 
 
 class ValidationError(Exception):
@@ -294,9 +302,14 @@ def main() -> int:
     p.add_argument("--day", type=int, default=None)
     args = p.parse_args()
 
-    if "ANTHROPIC_API_KEY" not in os.environ:
-        print("ANTHROPIC_API_KEY not set", file=sys.stderr)
-        return 2
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        # Treat as a no-op rather than a failure. The workflow runs on a
+        # schedule that may fire before the user has added the secret.
+        # Failing loudly produces red badges that obscure real problems.
+        print("ANTHROPIC_API_KEY not set; skipping (no-op).", file=sys.stderr)
+        print("Set the secret in repo Settings to enable daily generation.",
+              file=sys.stderr)
+        return 0
 
     spec = load_spec()
     day = find_next_day(spec, args.day)
