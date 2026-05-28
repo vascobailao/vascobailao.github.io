@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Coding Tools: A Practical 14-Day Course | Vasco Fernandes</title>
+  <title>Production Inference Systems and Agentic Data Platforms | Vasco Fernandes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --cell-border: #ddddd8; --done: #1f6f3d; --upcoming: #6b6b67; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --cell-border: #ddddd8; --done: #1f6f3d; --track-a: #b35d00; --track-b: #1c4d8a; --track-c: #5a3a8a; --track-d: #6a6a00; }
     html { scroll-behavior: smooth; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
     nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
@@ -17,34 +17,50 @@
     .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
     .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
     .nav-back:hover { color: var(--text); }
-    .container { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+    .container { max-width: 920px; margin: 0 auto; padding: 0 32px; }
 
-    .course-header { padding-top: calc(var(--nav-h) + 80px); padding-bottom: 64px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
-    .course-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
-    .course-title { font-size: clamp(32px, 5vw, 52px); font-weight: 300; letter-spacing: -0.025em; line-height: 1.08; margin-bottom: 20px; }
-    .course-subtitle { font-size: clamp(17px, 2vw, 21px); font-weight: 400; color: var(--muted); letter-spacing: -0.005em; line-height: 1.5; max-width: 680px; margin-bottom: 32px; }
+    .course-header { padding-top: calc(var(--nav-h) + 80px); padding-bottom: 64px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+    .course-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+    .course-title { font-size: clamp(34px, 5vw, 54px); font-weight: 300; letter-spacing: -0.025em; line-height: 1.05; margin-bottom: 22px; }
+    .course-subtitle { font-size: clamp(17px, 2vw, 21px); font-weight: 400; color: var(--muted); letter-spacing: -0.005em; line-height: 1.5; max-width: 720px; margin-bottom: 32px; }
     .course-meta { display: flex; gap: 24px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
     .course-meta span strong { color: var(--text); font-weight: 500; }
 
-    .section-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
-    .intro p { margin-bottom: 22px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
-    .intro { padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+    .intro { padding: 0 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+    .intro p { margin-bottom: 22px; font-size: 16px; line-height: 1.8; color: #2a2a28; max-width: 760px; }
     .intro strong { color: var(--text); font-weight: 600; }
+    .section-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+
+    .prereqs { margin: 32px 0; padding: 24px 28px; background: var(--code-bg); border-left: 3px solid var(--text); border-radius: 0 4px 4px 0; }
+    .prereqs h4 { font-size: 13px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .prereqs ul { margin: 0 0 0 22px; }
+    .prereqs li { margin-bottom: 8px; font-size: 15px; line-height: 1.65; }
+
+    .track { margin: 56px 0 0; }
+    .track-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 22px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .track-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; color: white; }
+    .track.a .track-tag { background: var(--track-a); }
+    .track.b .track-tag { background: var(--track-b); }
+    .track.c .track-tag { background: var(--track-c); }
+    .track.d .track-tag { background: var(--track-d); }
+    .track-title { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+    .track-days { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); margin-left: auto; }
+    .track-desc { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 22px; max-width: 760px; }
 
     .day-grid { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-    .day-card { background: var(--surface); padding: 24px 28px; display: grid; grid-template-columns: 60px 1fr auto; gap: 20px; align-items: center; text-decoration: none; color: var(--text); transition: background 0.15s; }
+    .day-card { background: var(--surface); padding: 22px 26px; display: grid; grid-template-columns: 56px 1fr auto; gap: 18px; align-items: start; text-decoration: none; color: var(--text); transition: background 0.15s; }
     .day-card.published:hover { background: var(--bg); }
-    .day-card.upcoming { cursor: default; opacity: 0.6; }
-    .day-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
-    .day-num strong { display: block; font-size: 18px; color: var(--text); font-weight: 500; margin-top: 4px; }
-    .day-content { display: flex; flex-direction: column; gap: 4px; }
-    .day-title { font-size: 16px; font-weight: 500; letter-spacing: -0.005em; line-height: 1.3; }
-    .day-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
-    .day-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--muted); text-align: right; white-space: nowrap; }
+    .day-card.upcoming { cursor: default; opacity: 0.7; }
+    .day-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); padding-top: 2px; }
+    .day-num strong { display: block; font-size: 17px; color: var(--text); font-weight: 500; margin-top: 2px; }
+    .day-content { display: flex; flex-direction: column; gap: 6px; }
+    .day-title { font-size: 15.5px; font-weight: 500; letter-spacing: -0.005em; line-height: 1.35; }
+    .day-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .day-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--muted); text-align: right; white-space: nowrap; padding-top: 4px; }
     .day-meta .day-status { display: inline-block; padding: 3px 8px; border-radius: 3px; background: var(--tag-bg); margin-bottom: 6px; }
     .day-meta .day-status.done { background: #e6f3eb; color: var(--done); }
 
-    .closing { margin: 80px 0; padding: 32px; background: var(--code-bg); border-left: 3px solid var(--text); border-radius: 0 4px 4px 0; }
+    .closing { margin: 72px 0; padding: 28px 32px; background: var(--code-bg); border-left: 3px solid var(--text); border-radius: 0 4px 4px 0; }
     .closing p { font-size: 15px; margin-bottom: 12px; }
     .closing p:last-child { margin-bottom: 0; }
     .closing strong { font-weight: 600; }
@@ -53,11 +69,13 @@
     .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
     .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
 
-    @media (max-width: 640px) {
+    @media (max-width: 720px) {
       .container { padding: 0 20px; }
       .nav-inner { padding: 0 20px; }
-      .day-card { grid-template-columns: 48px 1fr; gap: 14px; padding: 18px 20px; }
+      .day-card { grid-template-columns: 44px 1fr; gap: 12px; padding: 16px 18px; }
       .day-meta { grid-column: 2; text-align: left; }
+      .track-header { flex-wrap: wrap; }
+      .track-days { margin-left: 0; width: 100%; }
     }
   </style>
 </head>
@@ -71,162 +89,214 @@
 
   <div class="container">
     <div class="course-header">
-      <p class="course-label">14-Day Course / Vendor-Neutral / Hands-On</p>
-      <h1 class="course-title">AI Coding Tools: A Practical 14-Day Course</h1>
-      <p class="course-subtitle">A working engineer's course on getting real value out of Copilot, Cursor, Claude Code, Cody, Continue, Aider, and the rest. Heavy on labs, light on marketing.</p>
+      <p class="course-label">14-day course / Expert / 70+ labs</p>
+      <h1 class="course-title">Production Inference Systems and Agentic Data Platforms</h1>
+      <p class="course-subtitle">vLLM internals, KV-cache optimisation, JAX kernel programming, and the agentic systems that drive a real data platform. Four tracks, fourteen days, all real work.</p>
       <div class="course-meta">
         <span><strong>14</strong> days</span>
-        <span><strong>60+</strong> labs</span>
-        <span><strong>Vendor-neutral</strong></span>
-        <span>Started <strong>May 15, 2026</strong></span>
-        <span>One lesson per day</span>
+        <span><strong>4</strong> tracks</span>
+        <span><strong>70+</strong> labs</span>
+        <span><strong>Hardware required</strong></span>
+        <span>Started <strong>May 18, 2026</strong></span>
       </div>
     </div>
 
     <div class="intro">
-      <p class="section-label">Why this course</p>
-      <p>The official certification material for AI coding tools is, with rare exceptions, vendor marketing dressed as education. It tells you what features the vendor's product has. It does not tell you when those features actually help, when they get in the way, how the tools compare, or how to measure whether you are getting value from any of them. After teaching engineers to use these tools for years, I am convinced the gap between "I have a Copilot license" and "I am genuinely faster because of AI" is mostly a matter of unlearning the marketing and learning the engineering.</p>
-      <p>This course is the version I wish existed. It covers the same surface area as the major certifications (responsible use, prompt crafting, code generation, refactoring, testing, debugging) but it does so across <strong>seven tools</strong> instead of one, with <strong>real labs you can run on your own machine</strong>, and with an honest treatment of where each tool wins and loses. By the end of it you will have a personal evaluation rubric, a productivity baseline, and a clear answer to the question "which of these should I actually use, and for what."</p>
-      <p>The cadence is one lesson per day for fourteen days. Each lesson takes 60 to 120 minutes including the labs. You can compress the schedule if you want; you cannot skip the labs and learn anything useful.</p>
+      <p class="section-label">Why this course exists</p>
+      <p>Most "AI engineering" courses are tool surveys. This one is not. By the end of the fourteen days you will have read vLLM's scheduler line-by-line and shipped a patch upstream, implemented PagedAttention in Triton and beaten the reference kernel in at least one regime, hand-rolled a KV-quantisation scheme from the KIVI paper, written a Pallas flash-attention kernel that wins against cuDNN in your benchmark, distributed-trained a 1.3B model in JAX, and built three agentic systems that operate on a real data platform (lineage-aware dbt generation, CDC-driven schema migration, plan-aware SQL optimisation). The capstone composes the inference work and the data-platform work into a multi-tenant system you can defend on cost.</p>
+      <p>The course assumes you already know the basics. There is no chapter on "what is a transformer." There is a chapter on why <code>BlockManagerV2</code> exists, what its eviction policy gets wrong on long-lived chat sessions, and how to patch it.</p>
+
+      <div class="prereqs">
+        <h4>Prerequisites</h4>
+        <ul>
+          <li>Comfortable reading C++/CUDA. You will read flash-attention and the vLLM CSRC tree.</li>
+          <li>Have written a Pallas or Triton kernel before, even a small one. Day 8 assumes this.</li>
+          <li>Have shipped an inference system. You know what <code>nvidia-smi</code> shows you and you have written a load test.</li>
+          <li>Familiar with JAX's sharding model (<code>shard_map</code>, meshes, axis names). Day 7 starts at the deep end.</li>
+          <li>Familiar with at least one columnar warehouse (BigQuery, Snowflake, ClickHouse, DuckDB) and one CDC pipeline (Debezium, Materialize, Estuary).</li>
+          <li>Hardware access: at least one H100 for the inference labs; ideally 8x H100 for Day 9. A100 works with caveats noted in each lab.</li>
+        </ul>
+      </div>
     </div>
 
-    <div>
-      <p class="section-label">The 14-day curriculum</p>
-      <div class="day-grid">
+    <!-- Track A -->
+    <div class="track a">
+      <div class="track-header">
+        <span class="track-tag">Track A</span>
+        <span class="track-title">vLLM and KV-cache</span>
+        <span class="track-days">Days 1 to 6</span>
+      </div>
+      <p class="track-desc">From a single request through the engine to a production-grade KV-cache tiering system. Source-level depth, real upstream-able patches.</p>
 
-        <a class="day-card published" href="day-01-the-landscape.html">
+      <div class="day-grid">
+        <a class="day-card published" href="day-01-vllm-anatomy.html">
           <div class="day-num">DAY<strong>01</strong></div>
           <div class="day-content">
-            <div class="day-title">The Landscape: How Modern AI Coding Tools Actually Work</div>
-            <div class="day-desc">Inline completion vs. chat vs. agentic. Market map across seven tools. Five labs to install, configure, and benchmark them on your own machine.</div>
+            <div class="day-title">Anatomy of a vLLM request</div>
+            <div class="day-desc">Trace LLMEngine.step() through scheduler, model runner, sampler. Identify the three places p99 dies. Patch the scheduler with a custom priority class. Measure under Poisson arrivals.</div>
           </div>
-          <div class="day-meta"><span class="day-status done">PUBLISHED</span><br>May 15 · 5 labs</div>
+          <div class="day-meta"><span class="day-status done">PUBLISHED</span><br>May 18 · 6 labs</div>
         </a>
 
-        <a class="day-card published" href="day-02-responsible-ai.html">
+        <div class="day-card upcoming">
           <div class="day-num">DAY<strong>02</strong></div>
           <div class="day-content">
-            <div class="day-title">Responsible AI for Coding Tools</div>
-            <div class="day-desc">Where your code goes, what gets retained, license matching, IP exposure. Self-hosted vs. cloud, with a network audit lab.</div>
-          </div>
-          <div class="day-meta"><span class="day-status done">PUBLISHED</span><br>May 16 · 5 labs</div>
-        </a>
-
-        <a class="day-card published" href="day-03-how-completion-works.html">
-          <div class="day-num">DAY<strong>03</strong></div>
-          <div class="day-content">
-            <div class="day-title">How Code Completion Actually Works</div>
-            <div class="day-desc">Fill-in-the-middle, ghost text, latency budgets, tokenisation. Build a tiny FIM completion engine end-to-end.</div>
-          </div>
-          <div class="day-meta"><span class="day-status done">PUBLISHED</span><br>May 17 · 5 labs</div>
-        </a>
-
-        <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>04</strong></div>
-          <div class="day-content">
-            <div class="day-title">Context: What the Model Actually Sees</div>
-            <div class="day-desc">@-mentions, file context, repo grep, embeddings, retrieval. A/B test the same task with five different context strategies.</div>
-          </div>
-          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 18</div>
-        </div>
-
-        <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>05</strong></div>
-          <div class="day-content">
-            <div class="day-title">Prompt Engineering for Code</div>
-            <div class="day-desc">Specificity, examples, output formats, the XML/Markdown choice. Engineer five prompts for the same refactor and measure quality.</div>
+            <div class="day-title">PagedAttention from scratch (Triton)</div>
+            <div class="day-desc">Implement paged KV attention with vLLM's memory layout. Profile against xformers and FA2. Find the regime where your kernel wins and the regime where it loses.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 19</div>
         </div>
 
         <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>06</strong></div>
+          <div class="day-num">DAY<strong>03</strong></div>
           <div class="day-content">
-            <div class="day-title">System Prompts and Custom Instructions</div>
-            <div class="day-desc">CLAUDE.md, .cursorrules, project-level instructions. Write a config that fixes three recurring agent mistakes in your repo.</div>
+            <div class="day-title">Prefix cache internals and tenant isolation</div>
+            <div class="day-desc">Read RadixCache, identify races in concurrent prefill. Build a content-addressed cache. Construct a timing side-channel that detects cross-tenant cache hits. Defeat it.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 20</div>
         </div>
 
         <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>07</strong></div>
+          <div class="day-num">DAY<strong>04</strong></div>
           <div class="day-content">
-            <div class="day-title">Code Generation Patterns</div>
-            <div class="day-desc">Scaffolding, boilerplate, end-to-end CRUD generation. Build the same CRUD API with three tools and compare the diffs.</div>
+            <div class="day-title">KV quantisation: KIVI-2 from the paper</div>
+            <div class="day-desc">Group-wise asymmetric quantisation, mixed-precision per-channel keys, per-token values. Per-layer tolerance analysis. Ship a vLLM patch that toggles KV dtype per layer.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 21</div>
         </div>
 
         <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>08</strong></div>
+          <div class="day-num">DAY<strong>05</strong></div>
           <div class="day-content">
-            <div class="day-title">Refactoring with AI, Safely</div>
-            <div class="day-desc">Test-first refactoring, the "small steps" pattern, where AI breaks at scale. Refactor a 500-line function in five incremental edits.</div>
+            <div class="day-title">Long-context eviction: StreamingLLM, H2O, SnapKV</div>
+            <div class="day-desc">Implement all three. Construct adversarial inputs where each fails. Design a hybrid policy using attention-sink energy. Benchmark on 128k context.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 22</div>
         </div>
 
         <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>09</strong></div>
+          <div class="day-num">DAY<strong>06</strong></div>
           <div class="day-content">
-            <div class="day-title">Debugging with AI</div>
-            <div class="day-desc">Stack trace reasoning, "show me what changed", root-cause-first. Debug three real bugs in an open-source project.</div>
+            <div class="day-title">Tiered KV: HBM, host RAM, NVMe</div>
+            <div class="day-desc">Three-tier cache with cuFile for the GPU/NVMe path. LRU+frequency eviction across tiers. Throughput benchmark under mixed long-chat plus short-completion workloads.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 23</div>
         </div>
+      </div>
+    </div>
 
+    <!-- Track B -->
+    <div class="track b">
+      <div class="track-header">
+        <span class="track-tag">Track B</span>
+        <span class="track-title">JAX kernel and distributed</span>
+        <span class="track-days">Days 7 to 9</span>
+      </div>
+      <p class="track-desc">From shard_map fundamentals to a Pallas flash-attention kernel that beats cuDNN, to a real distributed training run in JAX with measured PyTorch comparison.</p>
+
+      <div class="day-grid">
         <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>10</strong></div>
+          <div class="day-num">DAY<strong>07</strong></div>
           <div class="day-content">
-            <div class="day-title">Testing with AI</div>
-            <div class="day-desc">Unit test generation, edge cases, mutation testing, TDD with agents. Get to 90% coverage and verify the tests catch real regressions.</div>
+            <div class="day-title">shard_map: tensor-parallel matmul and SP layernorm</div>
+            <div class="day-desc">2-way and 8-way tensor-parallel matmul in shard_map. Sequence-parallel layernorm that overlaps reduce-scatter with the next matmul. Measured overlap with jax.profiler.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 24</div>
         </div>
 
         <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>11</strong></div>
+          <div class="day-num">DAY<strong>08</strong></div>
           <div class="day-content">
-            <div class="day-title">Multi-File Edits and Agentic Workflows</div>
-            <div class="day-desc">Plan-then-execute, agent loops, tool use, when to step in. Build a small migration agent end-to-end.</div>
+            <div class="day-title">Pallas flash-attention beating cuDNN</div>
+            <div class="day-desc">Forward kernel with causal masking via block skipping (no mask materialisation). Win against cuDNN on H100 at seq_len=8192, head_dim=128 by 5% or more. Ablate.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 25</div>
         </div>
 
         <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>12</strong></div>
+          <div class="day-num">DAY<strong>09</strong></div>
           <div class="day-content">
-            <div class="day-title">Code Review with AI</div>
-            <div class="day-desc">Diff review, security review, style review. AI as second reviewer vs. AI as primary, with five real PRs scored against a human reviewer.</div>
+            <div class="day-title">FSDP training of a 1.3B model in JAX</div>
+            <div class="day-desc">Real loss curves over 24h on 8x H100. Optimiser-state sharding plus your Day 7 shard_map. Per-layer activation checkpointing. Beat the same arch in PyTorch FSDP.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 26</div>
         </div>
+      </div>
+    </div>
 
+    <!-- Track C -->
+    <div class="track c">
+      <div class="track-header">
+        <span class="track-tag">Track C</span>
+        <span class="track-title">Agentic data-platform automation</span>
+        <span class="track-days">Days 10 to 12</span>
+      </div>
+      <p class="track-desc">Agents that operate on real data infrastructure: lineage-aware dbt generation, CDC-driven schema migration, plan-aware SQL optimisation. Every agent has verifiable success criteria.</p>
+
+      <div class="day-grid">
         <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>13</strong></div>
+          <div class="day-num">DAY<strong>10</strong></div>
           <div class="day-content">
-            <div class="day-title">Evaluating AI Coding Tools</div>
-            <div class="day-desc">SWE-bench, HumanEval, custom evals. Build a 20-question eval that distinguishes three tools on tasks that match your work.</div>
+            <div class="day-title">Lineage-aware dbt agent</div>
+            <div class="day-desc">Reads manifest.json, knows grain, respects existing column conventions. Self-corrects on dbt test failure with row-count and uniqueness verifiers. Ships a PR with diff comment.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 27</div>
         </div>
 
         <div class="day-card upcoming">
-          <div class="day-num">DAY<strong>14</strong></div>
+          <div class="day-num">DAY<strong>11</strong></div>
           <div class="day-content">
-            <div class="day-title">Production Patterns and Anti-Patterns</div>
-            <div class="day-desc">When to use, when not to, the architecture of teams that ship more with AI. Capstone: measure your own AI-assisted productivity over a week.</div>
+            <div class="day-title">CDC-driven schema-evolution agent</div>
+            <div class="day-desc">Watches Debezium events. Classifies changes (additive, breaking, silent-semantic-shift). Generates warehouse migration PRs. Measure precision/recall against one week of replayed production CDC.</div>
           </div>
           <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 28</div>
         </div>
 
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>12</strong></div>
+          <div class="day-content">
+            <div class="day-title">Plan-aware SQL optimisation agent</div>
+            <div class="day-desc">Reads EXPLAIN ANALYZE plans. Identifies hash-join spilling, predicate-not-pushed-down, broadcast-threshold breach. Rewrites and shadow-validates with row hashing. 30-query benchmark.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 29</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Track D -->
+    <div class="track d">
+      <div class="track-header">
+        <span class="track-tag">Track D</span>
+        <span class="track-title">Capstone</span>
+        <span class="track-days">Days 13 to 14</span>
+      </div>
+      <p class="track-desc">Compose A + B + C. A working multi-tenant inference platform with cost-aware routing that you can defend with measured numbers.</p>
+
+      <div class="day-grid">
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>13</strong></div>
+          <div class="day-content">
+            <div class="day-title">Multi-tenant inference platform</div>
+            <div class="day-desc">Compose Day 6 tiered KV, Day 7 shard_map, Day 8 Pallas attention. Per-tenant rate limits and cache isolation. SLO-driven autoscaling. Benchmark vs. stock vLLM on a mixed workload.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 30</div>
+        </div>
+
+        <div class="day-card upcoming">
+          <div class="day-num">DAY<strong>14</strong></div>
+          <div class="day-content">
+            <div class="day-title">Cost-aware routing</div>
+            <div class="day-desc">Calibrated classifier routes between your platform and a frontier API. Match frontier-only quality at &lt;25% cost, measured against an eval that includes Day 10 dbt tasks and Day 12 SQL optimisations.</div>
+          </div>
+          <div class="day-meta"><span class="day-status">UPCOMING</span><br>May 31</div>
+        </div>
       </div>
     </div>
 
     <div class="closing">
-      <p><strong>How to use this course:</strong> read the lesson, run every lab, write down what surprised you. The labs are the load-bearing piece. Skipping them and reading the prose will give you opinions to repeat at parties; running them will give you taste.</p>
-      <p><strong>What you will need:</strong> a laptop with at least 16GB RAM, accounts on the relevant tools (most have free tiers), a small open-source repo to experiment in, and the discipline to actually measure things rather than vibe-check them.</p>
-      <p><strong>Cadence:</strong> one lesson published per day at this URL. Bookmark it. New days appear at the top of the grid as they ship.</p>
+      <p><strong>Cadence.</strong> One day published when you ping me for it. Each day is 6 to 10 hours of work for a senior engineer. The labs are the point; reading without doing produces no value here.</p>
+      <p><strong>Voice.</strong> Direct, evidence-based, no marketing words, no em dashes. Where I am not sure of something I say so. Where the existing literature is wrong I say where.</p>
+      <p><strong>What you produce.</strong> Patches, kernels, benchmark reports, agent codebases. By Day 14 you have something you can put on a CV and defend in any system-design round.</p>
     </div>
   </div>
 
