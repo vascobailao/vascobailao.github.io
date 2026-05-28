@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Day 2: PagedAttention from Scratch in Triton | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --output-bg: #fbfbf9; --cell-border: #ddddd8; --lab-bg: #fffdf6; --lab-border: #e8dfb8; --track-a: #b35d00; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .crumb { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px; }
+    .crumb a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+    .crumb a:hover { color: var(--text); border-bottom-color: var(--text); }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--track-a); margin-bottom: 18px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body h4 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 22px; margin: 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+
+    .nb-cell { margin: 32px 0; border: 1px solid var(--cell-border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+    .nb-cell pre { border: none; border-radius: 0; margin: 0; }
+    .nb-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--cell-border); display: flex; justify-content: space-between; align-items: center; }
+    .nb-label .nb-tag { color: var(--text); font-weight: 500; }
+    .nb-output { padding: 18px 22px; background: var(--output-bg); border-top: 1px solid var(--cell-border); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7; color: #2a2a28; white-space: pre; overflow-x: auto; }
+
+    table.nb-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13.5px; }
+    table.nb-table th, table.nb-table td { border: 1px solid var(--cell-border); padding: 9px 12px; text-align: left; vertical-align: top; }
+    table.nb-table th { background: var(--bg); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; }
+    table.nb-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; }
+
+    .lab { margin: 40px 0; padding: 28px 32px; background: var(--lab-bg); border: 1px solid var(--lab-border); border-radius: 8px; }
+    .lab-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+    .lab-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a6f00; background: #fff7d6; border: 1px solid #e8dfb8; padding: 4px 10px; border-radius: 4px; }
+    .lab-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+    .lab-title { font-size: 19px; font-weight: 500; letter-spacing: -0.005em; margin-bottom: 14px; }
+    .lab-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+    .lab p { margin-bottom: 16px; font-size: 15px; line-height: 1.75; }
+    .lab ul, .lab ol { margin: 0 0 16px 22px; }
+    .lab li { font-size: 15px; line-height: 1.7; margin-bottom: 8px; }
+    .lab .nb-cell { margin: 18px 0; }
+    .lab-deliv { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--lab-border); }
+    .lab-deliv-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a6f00; margin-bottom: 6px; }
+    .lab-deliv p { font-size: 14.5px; margin-bottom: 0; }
+
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } .lab { padding: 22px 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../../index.html">vasco fernandes</a>
+      <a class="nav-back" href="index.html">← course index</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="crumb"><a href="index.html">Production Inference Systems and Agentic Data Platforms</a> / Day 02</p>
+      <p class="post-label">Track A · Day 2 of 14 · 6 labs · CUDA + Triton kernel work</p>
+      <h1 class="post-title">PagedAttention from Scratch in Triton</h1>
+      <div class="post-meta">
+        <span>May 19, 2026</span>
+        <span class="dot"></span>
+        <span>~10 hours including labs</span>
+        <span class="dot"></span>
+        <span>H100 or A100 required</span>
+      </div>
+      <div class="tags">
+        <span class="tag">PagedAttention</span>
+        <span class="tag">Triton</span>
+        <span class="tag">FlashAttention</span>
+        <span class="tag">CUDA</span>
+        <span class="tag">Nsight Compute</span>
+        <span class="tag">GQA</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>Day 1 was the engine. Day 2 is the kernel inside the engine that does the actual work. Reading PagedAttention is the difference between knowing vLLM uses block-based KV and knowing why that costs you a few percent on prefill, why the block size is 16 and not 8 or 32, and why the H100 FlashAttention-2 paged variant lost to vLLM's bespoke CUDA kernel in some regimes until very recently. By the end of today you will have written your own Triton implementation, verified it against a Python reference, profiled it against xformers and FA2 with Nsight Compute, and produced a regime map showing where each kernel wins.</p>
+
+      <p>You will not match the production kernels in absolute throughput. That is fine and expected: the production kernels have years of micro-optimisation, manually tuned MMA tiles, and warp specialisation. Your Triton kernel will be 0.5 to 0.9x of FA2 on most regimes and will beat FA2 on at least one regime that we will identify by construction. The point is not to ship your kernel; the point is that by writing it you understand exactly what the production ones do.</p>
+
+      <h2>Why PagedAttention Exists at All</h2>
+
+      <p>Standard attention assumes contiguous KV per sequence. A batch of N sequences with maximum context length T uses a tensor of shape <code>[N, H, T, D]</code>. The contiguous layout makes the attention math straightforward: gather Q for the active query positions, dot product against the K of the sequence, softmax, weighted sum with V. FlashAttention-2 is built on this layout.</p>
+
+      <p>The problem with contiguous KV in a multi-tenant inference server is fragmentation. Sequences have different lengths. If you allocate <code>T_max</code> tokens per sequence, you waste memory on short sequences. If you allocate just-enough and a sequence grows past its allocation, you have to copy. Either way, you cannot dynamically add or remove sequences from the batch without paying for memory churn. This was the operational reality before vLLM: serving a mixed batch of 50-token and 4000-token sequences meant either reserving 4000 tokens per slot (90% waste on the short ones) or constantly compacting (latency spikes from memcpy).</p>
+
+      <p>The PagedAttention paper (Kwon et al., 2023) borrows the idea from operating systems. Memory is allocated in fixed-size blocks (the paper uses 16 tokens, vLLM has used 16 throughout, though it is now configurable). Each sequence has a <em>block table</em>: a small array mapping its logical token positions to the physical blocks that hold its KV. Sequences can grow by appending blocks. Sequences can be freed by releasing blocks back to the pool. Two sequences can share blocks if they share a prefix (this is the foundation of prefix caching).</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">memory layout</span><span>contiguous vs. paged</span></div>
+<pre><code>Contiguous KV (FA2 layout)
+  K_cache:  [num_seqs, num_heads, max_seq_len, head_dim]
+              ^                       ^
+              |                       wasted on short seqs
+              free per-seq view: K_cache[seq_idx]  ->  one contiguous chunk
+
+Paged KV (vLLM layout)
+  K_cache:        [num_blocks, num_kv_heads, block_size, head_dim]
+                    ^
+                    physical block pool, shared across all sequences
+
+  block_tables:   [num_seqs, max_blocks_per_seq]
+                    ^
+                    logical -> physical block mapping
+
+  context_lens:   [num_seqs]
+                    ^
+                    actual length per sequence (in tokens)
+
+To read seq s, position p:
+  block_logical = p // block_size
+  block_offset  = p % block_size
+  block_phys    = block_tables[s, block_logical]
+  k             = K_cache[block_phys, kv_head, block_offset, :]
+</code></pre>
+      </div>
+
+      <p>The kernel pays for this in two ways. First, the gather pattern: each block load is at a different physical address determined by <code>block_tables</code>, so the memory access is not strictly sequential. The hardware tolerates this well because block_size=16 and head_dim=128 give a 16x128xsizeof(fp16) = 4KB load per block, which is well-aligned and large enough to amortise the address indirection. Second, the loop over blocks pays an extra load per block (the block_tables entry). On H100 this is a few clocks per block, negligible.</p>
+
+      <p>The kernel saves on this in one big way: no padding. The contiguous layout pads to max_seq_len; the paged layout uses exactly <code>ceil(context_len / 16)</code> blocks per sequence. For mixed workloads, the memory savings are large enough that you can hold more sequences live, which often beats the per-kernel overhead by a substantial margin.</p>
+
+      <h2>The Online Softmax Recap</h2>
+
+      <p>You need this to write the kernel. If you have read the FlashAttention-2 paper, skip ahead.</p>
+
+      <p>Attention computes <code>O = softmax(QK^T / sqrt(d)) V</code>. The softmax is the bottleneck because it requires reading all of <code>QK^T</code> to normalise. The FlashAttention trick is online softmax: process K and V in blocks, maintain a running max <code>m</code> and a running sum <code>l</code>, and rescale the accumulated output when a new max is found.</p>
+
+      <p>Pseudocode, for one query and N blocks of K and V:</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">algorithm</span><span>online softmax in one query</span></div>
+<pre><code>m = -inf
+l = 0
+acc = 0    # head_dim vector
+
+for each KV block of size B:
+    s = q @ k_block.T          # shape [B]
+    m_new = max(m, max(s))
+    alpha = exp(m - m_new)     # rescale factor for old acc
+    p = exp(s - m_new)         # softmax numerator for this block
+    l = l * alpha + sum(p)     # new denominator
+    acc = acc * alpha + p @ v_block   # accumulate
+    m = m_new
+
+return acc / l
+</code></pre>
+      </div>
+
+      <p>Three things to internalise from this. The <code>alpha</code> rescaling makes the accumulator <em>correct</em> when a new max is discovered, by retroactively adjusting the contribution of earlier blocks. The pass is one-shot per block, so the kernel never materialises the full <code>QK^T</code> matrix. And the per-block math is what your Triton kernel will look like, almost line for line.</p>
+
+      <h2>The Triton Kernel, in Pieces</h2>
+
+      <p>You will build the kernel in stages. The first version is decode-only: one query token per sequence, which is the common case for inference once prefill is done. The grid is <code>(num_seqs, num_q_heads)</code>: one program per (sequence, head) pair, parallelising across the batch. Each program loops over the KV blocks of its sequence and accumulates the output for that one query.</p>
+
+      <h3>What each tensor looks like</h3>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">tensors</span><span>shapes and layouts</span></div>
+<pre><code># Llama-3.1-8B as the running example:
+#   num_q_heads  = 32
+#   num_kv_heads = 8   (GQA, 4 query heads per KV head)
+#   head_dim     = 128
+#   block_size   = 16
+
+Q             : [num_seqs, num_q_heads, head_dim]            # one token per seq
+K_cache       : [num_blocks, num_kv_heads, block_size, head_dim]
+V_cache       : [num_blocks, num_kv_heads, block_size, head_dim]
+block_tables  : [num_seqs, max_blocks_per_seq]               # int32
+context_lens  : [num_seqs]                                   # int32
+Out           : [num_seqs, num_q_heads, head_dim]
+
+# Strides come straight from .stride() in PyTorch; pass them all in.
+</code></pre>
+      </div>
+
+      <p>The kernel signature is large but every argument has a purpose. The strides handle non-contiguous tensors (which happen the moment you slice or transpose). Block size and head dim are <code>tl.constexpr</code> because Triton specialises kernels by their constexpr values and you want the loop bounds known at compile time.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">paged_attn_v1.py</span><span>decode kernel, one query per seq</span></div>
+<pre><code>import torch, triton, triton.language as tl
+
+@triton.jit
+def paged_attn_decode_kernel(
+    Q_ptr, K_cache_ptr, V_cache_ptr,
+    block_tables_ptr, context_lens_ptr,
+    Out_ptr, scale,
+    # Q strides
+    q_stride_s, q_stride_h, q_stride_d,
+    # K/V cache strides
+    kv_stride_blk, kv_stride_h, kv_stride_t, kv_stride_d,
+    # block_tables strides
+    bt_stride_s, bt_stride_b,
+    # Out strides
+    o_stride_s, o_stride_h, o_stride_d,
+    # constants
+    HEAD_DIM: tl.constexpr,
+    BLOCK_SIZE: tl.constexpr,
+    NUM_KV_HEADS: tl.constexpr,
+    NUM_Q_HEADS_PER_KV: tl.constexpr,  # = num_q_heads // num_kv_heads
+    MAX_BLOCKS_PER_SEQ: tl.constexpr,
+):
+    seq_idx = tl.program_id(0)
+    q_head_idx = tl.program_id(1)
+    kv_head_idx = q_head_idx // NUM_Q_HEADS_PER_KV
+
+    ctx_len = tl.load(context_lens_ptr + seq_idx)
+    num_blocks = (ctx_len + BLOCK_SIZE - 1) // BLOCK_SIZE
+
+    # Load this seq/head query into registers
+    d_off = tl.arange(0, HEAD_DIM)
+    q = tl.load(Q_ptr + seq_idx * q_stride_s
+                       + q_head_idx * q_stride_h
+                       + d_off * q_stride_d).to(tl.float32) * scale
+
+    # Online softmax state
+    m_i = -float('inf')
+    l_i = 0.0
+    acc = tl.zeros([HEAD_DIM], dtype=tl.float32)
+
+    # Loop over logical blocks
+    for blk in range(0, num_blocks):
+        phys_blk = tl.load(block_tables_ptr + seq_idx * bt_stride_s
+                                            + blk * bt_stride_b)
+        # Tokens in this physical block belonging to this seq
+        n_tok = tl.minimum(BLOCK_SIZE, ctx_len - blk * BLOCK_SIZE)
+        t_off = tl.arange(0, BLOCK_SIZE)
+        t_mask = t_off &lt; n_tok
+
+        # Pointer math for K block: [BLOCK_SIZE, HEAD_DIM]
+        k_base = (K_cache_ptr + phys_blk * kv_stride_blk
+                              + kv_head_idx * kv_stride_h)
+        k = tl.load(k_base + t_off[:, None] * kv_stride_t
+                           + d_off[None, :] * kv_stride_d,
+                    mask=t_mask[:, None], other=0.0).to(tl.float32)
+
+        # Scores for this block: [BLOCK_SIZE]
+        s = tl.sum(q[None, :] * k, axis=1)
+        s = tl.where(t_mask, s, -float('inf'))
+
+        # Online softmax update
+        m_new = tl.maximum(m_i, tl.max(s))
+        alpha = tl.exp(m_i - m_new)
+        p = tl.exp(s - m_new)
+        l_i = l_i * alpha + tl.sum(p)
+
+        # V block load and accumulate
+        v_base = (V_cache_ptr + phys_blk * kv_stride_blk
+                              + kv_head_idx * kv_stride_h)
+        v = tl.load(v_base + t_off[:, None] * kv_stride_t
+                           + d_off[None, :] * kv_stride_d,
+                    mask=t_mask[:, None], other=0.0).to(tl.float32)
+
+        acc = acc * alpha + tl.sum(p[:, None] * v, axis=0)
+        m_i = m_new
+
+    acc = acc / l_i
+
+    tl.store(Out_ptr + seq_idx * o_stride_s
+                     + q_head_idx * o_stride_h
+                     + d_off * o_stride_d,
+             acc.to(tl.bfloat16))
+
+
+def paged_attn_decode(Q, K_cache, V_cache, block_tables, context_lens, scale):
+    num_seqs, num_q_heads, head_dim = Q.shape
+    num_kv_heads = K_cache.shape[1]
+    block_size = K_cache.shape[2]
+    out = torch.empty_like(Q)
+
+    grid = (num_seqs, num_q_heads)
+    paged_attn_decode_kernel[grid](
+        Q, K_cache, V_cache, block_tables, context_lens, out, scale,
+        Q.stride(0), Q.stride(1), Q.stride(2),
+        K_cache.stride(0), K_cache.stride(1), K_cache.stride(2), K_cache.stride(3),
+        block_tables.stride(0), block_tables.stride(1),
+        out.stride(0), out.stride(1), out.stride(2),
+        HEAD_DIM=head_dim,
+        BLOCK_SIZE=block_size,
+        NUM_KV_HEADS=num_kv_heads,
+        NUM_Q_HEADS_PER_KV=num_q_heads // num_kv_heads,
+        MAX_BLOCKS_PER_SEQ=block_tables.shape[1],
+    )
+    return out
+</code></pre>
+      </div>
+
+      <p>This is roughly 80 lines of real Triton. Read it twice. Three subtleties worth flagging.</p>
+
+      <p>First, the <code>fp32</code> accumulator is mandatory. Doing the softmax in bfloat16 produces NaNs on any context length above a few thousand because of the exponential blowup. Even mixing the load in bf16 and computing in fp32 is the bare minimum; fp16 accumulation is unsafe.</p>
+
+      <p>Second, the loop <code>for blk in range(0, num_blocks)</code> is dynamic (the bound is a runtime value). Triton does not unroll dynamic loops by default. If you want unrolling for a known-small upper bound, you pass <code>MAX_BLOCKS_PER_SEQ</code> as constexpr and write <code>for blk in tl.range(0, MAX_BLOCKS_PER_SEQ, num_stages=2)</code>; the <code>num_stages=2</code> pipelines the load and compute. We use the simpler version above and add pipelining in Lab 4.</p>
+
+      <p>Third, the masking inside the block (<code>t_mask</code>) handles the last partial block. Every block except possibly the last has exactly <code>block_size</code> valid tokens. The mask is set to <code>tl.arange(0, BLOCK_SIZE) &lt; n_tok</code>. Off-by-ones in this mask produce wrong outputs without an error message; verify against a reference (Lab 2).</p>
+
+      <h3>What this kernel does NOT do</h3>
+
+      <p>It is decode-only. Real prefill, including chunked prefill, has multiple query tokens per sequence. Extending the kernel for that requires either a second grid dimension (one program per query position) or tiling over a query block; Lab 3 walks through this. There is also no causal mask: in decode, the query is always the newest token and attends to everything, so no mask is needed. In prefill, you need to mask out the upper triangle.</p>
+
+      <p>It also assumes the data type is bfloat16. vLLM also supports fp16 and fp8 KV; the latter requires separate scale tensors per block and an extra dequantisation step in the load. We handle fp8 KV on Day 4.</p>
+
+      <h2>Profiling Tools You Will Need</h2>
+
+      <p>Two tools matter for this day. <code>torch.cuda.Event</code> for wall-clock timing of a kernel under a given input; <code>ncu</code> (Nsight Compute) for per-kernel SM utilisation, memory throughput, and warp-state breakdown. The Triton ecosystem also has <code>triton.testing.do_bench</code> which wraps Event-based timing with warmup and statistics.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">bench_template.py</span><span>standard timing harness</span></div>
+<pre><code>import torch, triton
+
+def bench(fn, *args, warmup=25, rep=100):
+    # do_bench returns time-per-call in milliseconds.
+    ms = triton.testing.do_bench(lambda: fn(*args), warmup=warmup, rep=rep)
+    return ms
+
+# Example usage
+ms_ours = bench(paged_attn_decode, Q, Kc, Vc, bt, cl, scale)
+ms_fa2  = bench(fa2_paged_call, Q, Kc, Vc, bt, cl, scale)
+print(f"ours: {ms_ours:.3f} ms  |  FA2: {ms_fa2:.3f} ms  |  ratio: {ms_ours/ms_fa2:.2f}x")
+</code></pre>
+      </div>
+
+      <p>For Nsight Compute, you want to capture exactly one launch of one kernel. The way I do it: wrap the kernel call in <code>torch.cuda.profiler.start()</code> / <code>stop()</code> and run with <code>ncu --target-processes all --launch-skip 5 --launch-count 1 --set full python bench.py</code>. The skip-5 is so you avoid the warmup-pass JIT compile, the count-1 captures one launch in full detail. The output is a roughly 100MB report; open with <code>ncu-ui</code>.</p>
+
+      <p>The four Nsight numbers you actually look at on first profile: SM utilisation (target above 60%), DRAM bandwidth (you want this in the 70 to 90% of peak for a memory-bound kernel, which paged attention decode is), achieved occupancy (you want above 0.5), and the warp-state breakdown (Stall LG Throttle and Stall Long Scoreboard tell you you are memory-bound; Stall MIO Throttle tells you the LSU pipe is saturated).</p>
+
+      <h2>The Labs</h2>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 01</span>
+          <span class="lab-num">~75 min</span>
+        </div>
+        <h3 class="lab-title">Reference implementation in pure PyTorch</h3>
+        <p class="lab-meta">Correctness scaffolding. Difficulty: medium. Output: a slow but obviously-correct reference you can verify Triton against.</p>
+
+        <p>Before you write a kernel you cannot verify, write the reference. The reference is paged attention in PyTorch operations only, with no kernel calls. It is slow (it materialises the full QK^T) but it is short, readable, and trivially correct. Every Triton kernel you ship will diff against this on a fixed-seed input.</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">reference.py</span><span>paged attention, PyTorch only</span></div>
+<pre><code>import torch
+import torch.nn.functional as F
+
+def paged_attn_reference(Q, K_cache, V_cache, block_tables, context_lens, scale):
+    """
+    Q             : [num_seqs, num_q_heads, head_dim]
+    K_cache       : [num_blocks, num_kv_heads, block_size, head_dim]
+    V_cache       : [num_blocks, num_kv_heads, block_size, head_dim]
+    block_tables  : [num_seqs, max_blocks_per_seq]  int32
+    context_lens  : [num_seqs]                       int32
+    scale         : float, 1/sqrt(head_dim)
+    """
+    num_seqs, num_q_heads, head_dim = Q.shape
+    num_kv_heads = K_cache.shape[1]
+    block_size = K_cache.shape[2]
+    q_heads_per_kv = num_q_heads // num_kv_heads
+
+    out = torch.zeros_like(Q)
+    for s in range(num_seqs):
+        ctx = int(context_lens[s].item())
+        # gather K and V for this sequence into a contiguous tensor
+        n_blocks = (ctx + block_size - 1) // block_size
+        phys = block_tables[s, :n_blocks]                # [n_blocks]
+        K_s = K_cache[phys]                              # [n_blocks, KV_H, BS, D]
+        V_s = V_cache[phys]
+        # collapse blocks
+        K_s = K_s.permute(1, 0, 2, 3).reshape(num_kv_heads, n_blocks * block_size, head_dim)
+        V_s = V_s.permute(1, 0, 2, 3).reshape(num_kv_heads, n_blocks * block_size, head_dim)
+        # mask the tail of the last block
+        K_s = K_s[:, :ctx, :]                            # [KV_H, ctx, D]
+        V_s = V_s[:, :ctx, :]
+        for h in range(num_q_heads):
+            kvh = h // q_heads_per_kv
+            q = Q[s, h]                                  # [D]
+            k = K_s[kvh]                                 # [ctx, D]
+            v = V_s[kvh]
+            scores = (q @ k.T) * scale                   # [ctx]
+            probs = F.softmax(scores.float(), dim=-1).to(v.dtype)
+            out[s, h] = probs @ v                        # [D]
+    return out
+</code></pre>
+        </div>
+
+        <p>The double loop is intentional: it makes the indexing obvious. Performance is irrelevant; correctness is.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A reference function that, given a fixed-seed set of (Q, K_cache, V_cache, block_tables, context_lens), produces an output that matches a known-correct external reference (vLLM's own <code>paged_attention</code> op from <code>vllm._C</code>, called against the same inputs) to within fp32 rounding error. If your reference disagrees with vLLM's by more than 1e-3 in any element, fix the reference before continuing.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 02</span>
+          <span class="lab-num">~120 min</span>
+        </div>
+        <h3 class="lab-title">First working Triton kernel, correctness-validated</h3>
+        <p class="lab-meta">Kernel writing. Difficulty: hard. Output: a Triton kernel matching the reference to within 1e-2 relative error.</p>
+
+        <p>Take the kernel listed in the body above. Get it compiling. Get it producing the right shape. Get it passing a correctness check against the reference. Expect at least two bugs on the way:</p>
+
+        <ul>
+          <li>The mask boundary on the last block. Off by one will produce small numerical drift that grows with context length. Test specifically at context lengths that fill a block exactly (e.g. 256, 512) and lengths that leave 1 token in the last block (e.g. 257, 513).</li>
+          <li>The dtype promotion in the scores. If you compute scores in bf16 and skip the <code>.to(tl.float32)</code> on Q and K, you will pass tests for short contexts and fail for long ones because of accumulated rounding error.</li>
+        </ul>
+
+        <p>Use this validation harness:</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">verify.py</span><span>tight correctness check</span></div>
+<pre><code>import torch
+torch.manual_seed(42)
+
+def make_inputs(num_seqs=16, max_ctx=2048, num_q_heads=32, num_kv_heads=8,
+                head_dim=128, block_size=16, dtype=torch.bfloat16):
+    ctx_lens = torch.randint(64, max_ctx, (num_seqs,), dtype=torch.int32, device="cuda")
+    max_blocks = (max_ctx + block_size - 1) // block_size
+    # Make a block pool large enough for all sequences with no sharing
+    total_blocks = num_seqs * max_blocks + 100
+    K = torch.randn(total_blocks, num_kv_heads, block_size, head_dim,
+                    dtype=dtype, device="cuda") * 0.1
+    V = torch.randn_like(K) * 0.1
+    block_tables = torch.zeros(num_seqs, max_blocks, dtype=torch.int32, device="cuda")
+    next_free = 0
+    for s in range(num_seqs):
+        n = (int(ctx_lens[s].item()) + block_size - 1) // block_size
+        block_tables[s, :n] = torch.arange(next_free, next_free + n,
+                                           dtype=torch.int32, device="cuda")
+        next_free += n
+    Q = torch.randn(num_seqs, num_q_heads, head_dim, dtype=dtype, device="cuda") * 0.1
+    return Q, K, V, block_tables, ctx_lens
+
+Q, K, V, bt, cl = make_inputs()
+scale = 1.0 / (Q.shape[-1] ** 0.5)
+
+ref  = paged_attn_reference(Q, K, V, bt, cl, scale)
+ours = paged_attn_decode(Q, K, V, bt, cl, scale)
+
+abs_err = (ref - ours).abs()
+rel_err = abs_err / (ref.abs() + 1e-6)
+print(f"max abs: {abs_err.max():.4e}  |  max rel: {rel_err.max():.4e}  |  "
+      f"mean abs: {abs_err.mean():.4e}")
+assert rel_err.max() &lt; 1e-2, "Triton kernel diverges from reference"
+</code></pre>
+        </div>
+
+        <p>If you get correctness, time the kernel against the reference. The reference will be ~100x slower. That is fine; the reference exists to be correct, not fast.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A Triton kernel file plus the verify.py harness, with the assertion passing on at least three different (num_seqs, max_ctx) combinations including one where the last block is partial. A timing comparison to the PyTorch reference showing the expected order-of-magnitude speedup.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 03</span>
+          <span class="lab-num">~90 min</span>
+        </div>
+        <h3 class="lab-title">Extend to multiple query tokens per sequence (prefill chunks)</h3>
+        <p class="lab-meta">Kernel extension. Difficulty: hard. Output: kernel handles both decode and prefill chunks correctly.</p>
+
+        <p>Real prefill has up to <code>chunk_size</code> query tokens per sequence per kernel launch (256 to 2048 typical). Decode has one. You want one kernel that handles both. The standard pattern is to add a third grid dimension over query tiles and to write the kernel as if each program owns a query block of size <code>BLOCK_M</code> (rows) attending to all of the KV blocks of the sequence (columns).</p>
+
+        <p>The grid becomes <code>(num_seqs, num_q_heads, triton.cdiv(num_query_tokens_for_this_seq, BLOCK_M))</code>. The complication is that the number of query tokens varies per sequence (some sequences are in decode with 1 query token, others are prefilling chunks of hundreds). The clean way to handle this is a flat <code>cu_query_lens</code> (cumulative query lengths) so a single program ID can find its sequence and its position within the sequence's queries.</p>
+
+        <p>You also need a causal mask now: query token <code>i</code> can attend to KV positions <code>0 .. start_pos_for_this_chunk + i</code>. For decode, <code>i = 0</code> and <code>start_pos</code> = ctx_len - 1, so the mask is trivially "everything." For prefill, you mask the upper triangle of the chunk's local scores.</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">paged_attn_v2.py (sketch)</span><span>multi-query, causal-masked</span></div>
+<pre><code># Signature additions:
+#   cu_query_lens : [num_seqs+1]  cumulative query lengths
+#   start_positions: [num_seqs]   first absolute position of each chunk
+#                                  (= ctx_len_before_chunk)
+
+@triton.jit
+def paged_attn_kernel_v2(..., BLOCK_M: tl.constexpr, BLOCK_N: tl.constexpr,
+                         ...):
+    seq_idx = tl.program_id(0)
+    q_head_idx = tl.program_id(1)
+    m_tile = tl.program_id(2)
+
+    q_start = tl.load(cu_query_lens + seq_idx)
+    q_end   = tl.load(cu_query_lens + seq_idx + 1)
+    q_len   = q_end - q_start
+    m_off   = m_tile * BLOCK_M + tl.arange(0, BLOCK_M)
+    m_mask  = m_off &lt; q_len
+    if not tl.max(m_mask): return    # nothing to do for this tile
+
+    # Load Q tile: [BLOCK_M, HEAD_DIM]
+    ...
+    start_pos = tl.load(start_positions_ptr + seq_idx)
+
+    # Online softmax state for the tile
+    m_i = tl.full([BLOCK_M], -float('inf'), dtype=tl.float32)
+    l_i = tl.zeros([BLOCK_M], dtype=tl.float32)
+    acc = tl.zeros([BLOCK_M, HEAD_DIM], dtype=tl.float32)
+
+    ctx_len = tl.load(context_lens_ptr + seq_idx)
+    num_kv_blocks = (ctx_len + BLOCK_SIZE - 1) // BLOCK_SIZE
+    for blk in range(0, num_kv_blocks):
+        phys_blk = tl.load(block_tables_ptr + seq_idx * bt_stride_s + blk)
+        # Load K, V blocks
+        # Compute scores [BLOCK_M, BLOCK_SIZE]
+        # Causal mask: kv_position = blk * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
+        #              query_position = start_pos + m_off
+        #              valid = kv_position &lt;= query_position[:, None]
+        # Combined with t_mask and m_mask.
+        ...
+</code></pre>
+        </div>
+
+        <p>This is the right place to also start using <code>tl.dot</code> for the QK^T and PV products if the tiles are large enough (BLOCK_M and BLOCK_N both 64 or above to use tensor cores). The element-wise version in Lab 2's kernel was fine because BLOCK_M = 1 (decode), but for prefill chunks you want tensor-core throughput.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>A kernel handling both single-query and multi-query inputs correctly, verified against an extended reference. A short writeup describing how you handled the causal mask and where you switched to <code>tl.dot</code>.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 04</span>
+          <span class="lab-num">~90 min</span>
+        </div>
+        <h3 class="lab-title">Pipeline the block loop and profile with Nsight Compute</h3>
+        <p class="lab-meta">Optimisation. Difficulty: hard. Output: 1.3x to 2x speedup over your Lab 2 kernel plus a Nsight report.</p>
+
+        <p>Your Lab 2 kernel is correct but probably memory-bound and not pipelining loads with compute. Two optimisations bring it within shouting distance of FA2.</p>
+
+        <p>First, software pipelining via <code>tl.range(..., num_stages=2)</code>. This tells Triton to issue the load for block N+1 while computing on block N. For a memory-bound kernel like paged decode this typically yields 1.3 to 1.5x.</p>
+
+        <p>Second, vectorised loads. Make sure the head_dim dimension's stride is 1 (the contiguous one) and that the <code>tl.arange</code> over head_dim is the inner index. Triton tries to coalesce automatically but failures are common when you transpose the load by accident.</p>
+
+        <p>Now run Nsight Compute. The numbers to read first:</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">terminal</span><span>capture exactly one launch with the full set</span></div>
+<pre><code># profile_one.sh
+ncu --target-processes all \
+    --launch-skip 5 --launch-count 1 \
+    --set full \
+    --kernel-id "::paged_attn_decode_kernel:" \
+    --export profile.ncu-rep \
+    python bench.py
+</code></pre>
+        </div>
+
+        <p>Open <code>profile.ncu-rep</code> in <code>ncu-ui</code> and locate:</p>
+        <ul>
+          <li><strong>Compute (SM) Throughput</strong>: target above 50% for memory-bound, target above 80% for compute-bound after Lab 3 changes (tensor cores enabled).</li>
+          <li><strong>Memory Throughput</strong>: for paged decode this should be 70 to 90% of peak DRAM BW; if it is below 50%, your loads are not coalescing and the inner stride is wrong.</li>
+          <li><strong>Achieved Occupancy</strong>: target above 0.5; if much lower, you have register pressure (kernel uses too many registers and the SM can launch fewer warps).</li>
+          <li><strong>Warp State Breakdown</strong>: under "Stall Long Scoreboard" you see how long warps wait on memory; under "Stall MIO Throttle" you see if the LSU is the bottleneck.</li>
+        </ul>
+
+        <p>Diagnose what your kernel is bound on. If it is memory bound but DRAM BW is high, you are already near peak and the only path to more speed is reducing the working set (Day 4: KV quantisation). If memory bound and DRAM BW is low, you are not coalescing. If compute bound, you are using too many ops per byte loaded.</p>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>Two screenshots from Nsight Compute (Speed Of Light, Warp State). A short root-cause diagnosis: "my kernel is X-bound because metric Y is Z." A timing measurement showing the speedup over Lab 2's kernel.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 05</span>
+          <span class="lab-num">~90 min</span>
+        </div>
+        <h3 class="lab-title">Find a regime where your kernel beats FA2 paged</h3>
+        <p class="lab-meta">Adversarial benchmarking. Difficulty: hard. Output: one regime where your kernel wins, with explanation.</p>
+
+        <p>FlashAttention-2 paged is heavily optimised for the common path: medium context lengths (1k to 8k), large batch sizes (16 to 128), block_size=256 internal tiling. It is excellent at this. The places it leaves performance on the table are the edges.</p>
+
+        <p>Three regimes worth probing:</p>
+
+        <ol>
+          <li><strong>Very short contexts (under 256 tokens) with large batch.</strong> FA2's internal tile size and warp specialisation pay setup cost that does not amortise on tiny contexts. A simple Triton kernel with smaller tiles can win 1.05 to 1.2x here.</li>
+          <li><strong>Mixed sequence lengths with a heavy tail.</strong> If 90% of your batch is 256 tokens but 10% is 4096, FA2 pads to the max. Your paged kernel does not pad. The win is larger as the imbalance grows.</li>
+          <li><strong>GQA with many query heads per KV head.</strong> Your kernel can be specialised so that 4 query heads share one K block load, saving 4x on K bandwidth. FA2 has its own version of this; check whether your implementation exploits it more aggressively in some configurations.</li>
+        </ol>
+
+        <p>Construct a benchmark sweep across (batch size, mean context length, context length stddev). Time both kernels (FA2 paged is in <code>flash_attn.flash_attn_with_kvcache</code> with <code>block_table</code> argument). Find one (batch, ctx, std) cell where your kernel wins by at least 5%. Explain why with Nsight evidence.</p>
+
+        <div class="nb-cell">
+          <div class="nb-label"><span class="nb-tag">sweep.py</span><span>regime sweep</span></div>
+<pre><code>import itertools, pandas as pd
+
+batches = [1, 4, 16, 64, 256]
+mean_ctxs = [128, 512, 2048, 8192]
+ctx_stds  = [0.0, 0.5, 2.0]  # ratio of std/mean
+
+rows = []
+for B, mu, sigma_ratio in itertools.product(batches, mean_ctxs, ctx_stds):
+    Q, K, V, bt, cl = make_workload(B, mu, sigma_ratio)
+    ms_ours = bench(paged_attn_decode, Q, K, V, bt, cl, scale)
+    ms_fa2  = bench(fa2_paged,         Q, K, V, bt, cl, scale)
+    rows.append({"B": B, "mu": mu, "sigma_ratio": sigma_ratio,
+                 "ms_ours": ms_ours, "ms_fa2": ms_fa2,
+                 "win_ratio": ms_fa2 / ms_ours})
+
+df = pd.DataFrame(rows).sort_values("win_ratio", ascending=False)
+print(df.head(10))
+</code></pre>
+        </div>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>The full sweep table. The single best cell for your kernel. A two-paragraph explanation citing Nsight metrics for why you win that cell. If you cannot beat FA2 anywhere, write up why; that is also a valid outcome and contains useful information.</p>
+        </div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head">
+          <span class="lab-tag">Lab 06</span>
+          <span class="lab-num">~75 min · capstone for Day 2</span>
+        </div>
+        <h3 class="lab-title">Regime map and writeup</h3>
+        <p class="lab-meta">Synthesis. Difficulty: medium-hard. Output: a heatmap of (your kernel / FA2) ratio across the workload grid and a publishable writeup.</p>
+
+        <p>Take the sweep from Lab 5, render it as a heatmap (batch on x, mean context on y, faceted by std), and annotate the cells. Add one row of vLLM's bespoke CUDA kernel (from <code>vllm._C.ops.paged_attention_v2</code>) for reference. You now have a three-way comparison across the operating envelope.</p>
+
+        <p>Write a 1.5 to 2 page memo with this structure:</p>
+
+        <ol>
+          <li><strong>What I built.</strong> One paragraph describing the kernel, the implementation strategy (decode-first then multi-query), and the optimisation passes.</li>
+          <li><strong>How it compares.</strong> The heatmap, narrated. Highlight the cell where you win, the cells where you are within 10%, and the cells where you lose by more than 20%.</li>
+          <li><strong>Why each behaviour.</strong> Reference Nsight metrics. For each performance regime, name the limiting resource (DRAM BW, tensor core utilisation, register pressure, occupancy).</li>
+          <li><strong>What would close the gap.</strong> Concrete: would you switch to a different tile shape, add warp specialisation, change the block traversal order, switch to FP8? For each, predict the speedup and the work cost.</li>
+        </ol>
+
+        <div class="lab-deliv">
+          <div class="lab-deliv-label">Deliverable</div>
+          <p>The memo and the heatmap. This is the artefact you would put in front of a hiring panel for an inference-team role; treat it that way. Day 13's capstone reuses this kernel and this analysis.</p>
+        </div>
+      </div>
+
+      <h2>What You Should Take Away</h2>
+
+      <p><strong>Paging is an OS trick applied to KV.</strong> It solves fragmentation, enables prefix sharing, and pays a small constant overhead per block lookup. The block table is the data structure that makes it work; understanding it is the foundation for everything in Track A.</p>
+
+      <p><strong>Online softmax is what makes long-context attention tractable.</strong> The per-block state (m, l, acc) is small and the rescaling is exact. Every modern attention kernel is some variant of this.</p>
+
+      <p><strong>Triton is good enough to write production-shaped kernels, but it will lose to hand-tuned CUDA in steady state.</strong> The gap is 10 to 30 percent in most regimes. The gap closes when you exploit corner cases the production kernels do not (extreme imbalance, very small batches, specific dtype combinations).</p>
+
+      <p><strong>Profiling is the work.</strong> Without Nsight, you are tuning by superstition. The four metrics (SM throughput, memory throughput, occupancy, warp state) tell you what to do next every time.</p>
+
+      <p><strong>The regime map is more valuable than the speedup number.</strong> Anyone can show a kernel that wins on a chosen benchmark. The interesting question is "where does it lose, and why" because the answer reveals the limit of your kernel design.</p>
+
+      <h2>Tomorrow</h2>
+
+      <p>Day 3 moves to prefix caching. Read vLLM's RadixCache implementation, identify the race conditions in concurrent prefill, design a correct content-addressed cache, and build a timing side-channel that detects cross-tenant cache hits on a shared deployment. Then build the per-tenant salt scheme that defeats it. The lab is half kernel work and half adversarial security; bring both hats.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="index.html">← Course index</a>
+      <a href="../../index.html#contact">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>
