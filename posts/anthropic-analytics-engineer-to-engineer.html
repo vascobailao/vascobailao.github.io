@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reading Anthropic's Self-Service Analytics Post, Engineer to Engineer | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --output-bg: #fbfbf9; --cell-border: #ddddd8; --quote-bg: #f7f5ee; --quote-border: #d4c98c; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 20px; line-height: 1.3; }
+    .post-body h3 { font-size: 17px; font-weight: 500; margin: 36px 0 14px; }
+    .post-body h4 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 22px; margin: 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+    .quote { background: var(--quote-bg); border-left: 3px solid var(--quote-border); padding: 18px 22px; margin: 28px 0; border-radius: 0 4px 4px 0; font-style: italic; }
+    .quote p { margin-bottom: 0; font-size: 15px; color: #2a2a28; }
+    .quote-attr { font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+    .nb-cell { margin: 32px 0; border: 1px solid var(--cell-border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+    .nb-cell pre { border: none; border-radius: 0; margin: 0; }
+    .nb-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--cell-border); display: flex; justify-content: space-between; align-items: center; }
+    .nb-label .nb-tag { color: var(--text); font-weight: 500; }
+
+    table.nb-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13.5px; }
+    table.nb-table th, table.nb-table td { border: 1px solid var(--cell-border); padding: 9px 12px; text-align: left; vertical-align: top; }
+    table.nb-table th { background: var(--bg); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; }
+
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">Data Engineering · Critique</p>
+      <h1 class="post-title">Reading Anthropic's Self-Service Analytics Post, Engineer to Engineer</h1>
+      <div class="post-meta">
+        <span>June 4, 2026</span>
+        <span class="dot"></span>
+        <span>27 min read</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Anthropic</span>
+        <span class="tag">Semantic Layer</span>
+        <span class="tag">MetricFlow</span>
+        <span class="tag">Skills</span>
+        <span class="tag">Evals</span>
+        <span class="tag">Data Engineering</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>Anthropic published a case study titled <em>How Anthropic enables self-service data analytics with Claude</em>. The headline number is striking: 95% of business analytics queries automated at roughly 95% accuracy, with the secret being not a more powerful model but a layer they call "Skills." The post is good in places, hand-waved in others, and contains a 60-percentage-point claim that deserves more scrutiny than it has received in the tech press. This is a peer-level read-through, engineer to engineer. I respect the work and I am going to push hard on the parts where the post is doing more work than the evidence supports.</p>
+
+      <p>The TL;DR of my reading: Anthropic has independently rediscovered the semantic layer, given it a new name, run a benchmark whose construction is not public, and shipped a system that has the same maintenance treadmill every dbt deployment has had since 2018. The thing they got <em>right</em> is the operational stack around the agent (skills as procedural knowledge, ablation testing, online adversarial review). The thing they got <em>wrong</em> is presenting the underlying technique as a Claude story when it is really a data-modelling story that any team can replicate with MetricFlow, Cube, or LookML.</p>
+
+      <p>The rest of this post walks through the claims, the architecture, the evidence, and what I would build differently. If you are deploying analytics agents in production, the maintenance section is the part that matters most.</p>
+
+      <h2>What Anthropic Actually Claims</h2>
+
+      <p>Distilling the post and the surrounding write-ups (their data lead's X thread, the ZenML LLMOps DB entry, secondary coverage), the load-bearing claims are:</p>
+
+      <ol>
+        <li><strong>Coverage:</strong> 95% of internal business analytics queries are now answered by Claude-powered agents, not by humans.</li>
+        <li><strong>Accuracy:</strong> aggregate accuracy is approximately 95% on their offline evaluation set. Some domains hit 99%.</li>
+        <li><strong>The skills-vs-no-skills delta:</strong> without Skills, accuracy is at or below 21% on the same eval set. With Skills, it exceeds 95%.</li>
+        <li><strong>The recommended insight:</strong> analytics with LLMs is "primarily a context and verification problem, not a code-generation problem."</li>
+        <li><strong>The recommended counter-pattern:</strong> auto-generating metric definitions from raw tables was net-negative compared to a smaller, human-curated set.</li>
+        <li><strong>The honest caveat:</strong> offline accuracy degraded from ~95% to ~65% within a month when the Skills documents were not maintained against schema drift.</li>
+      </ol>
+
+      <p>The architecture, as best I can reconstruct it from the post, is a multi-layer stack:</p>
+
+      <ul>
+        <li><strong>Data foundations.</strong> The warehouse and the canonical tables. This is the source of truth.</li>
+        <li><strong>Semantic layer.</strong> Hand-curated metric definitions that map natural-language metric names ("active users", "ARR", "churn") to deterministic SQL. The agent is required by skill instruction to use this first.</li>
+        <li><strong>Skills.</strong> Markdown files containing procedural knowledge: how to answer questions about cohort analysis, how to define a "weekly active user" for product X, how to caveat results when joining tables A and B. The skills are loaded into the agent's context based on the question.</li>
+        <li><strong>Validation.</strong> Offline evals, ablation tests, and online monitoring with adversarial review.</li>
+      </ul>
+
+      <p>This is a reasonable architecture. Whether it deserves the framing it is being given is another question.</p>
+
+      <h2>Challenge 1: The 21 to 95 Percent Jump</h2>
+
+      <p>The headline number behind the Skills story is the size of the lift. <em>Without Skills, Claude scores below 21%. With Skills, above 95%.</em> A 74-percentage-point delta from adding a markdown layer of procedural knowledge.</p>
+
+      <p>Believe this number for a moment. What does it mean? It means that on the eval set Anthropic constructed, almost four out of five questions cannot be answered correctly by a frontier model without their specific markdown layer. That is an extraordinary claim about the model and an even more extraordinary claim about the eval.</p>
+
+      <p>Two paths to read this. Option one: the eval is dominated by company-specific questions where the schema, the metric definitions, and the join keys are not knowable from the raw warehouse. In that world, the baseline of 21% is actually generous; a model with zero context should score zero on "how many monthly active accounts did our SMB segment have in Q3 in EMEA on the new pricing?" The Skills layer encodes the joins, filters, and definitions and gets you to 95%. The lift comes from the data-modelling content of the Skills, not from anything Claude-specific.</p>
+
+      <p>Option two: the eval is closer to a general analytics benchmark and the 21% baseline reflects model failures (misreading column types, hallucinating metric names, getting fiscal-year vs calendar-year wrong). In that case the Skills layer is acting as a system prompt that corrects these failures, and the lift is more about prompt engineering than about a semantic-layer pattern.</p>
+
+      <p>The post does not tell you which world it is in. I suspect mostly the first with some of the second, but suspicion is not evidence. Two specific things are missing from the post that would let you read this correctly:</p>
+
+      <p><strong>The composition of the eval set.</strong> What fraction of the questions require company-specific entity resolution (a metric name, a segment name, a fiscal-period name)? What fraction are pure SQL questions on a documented schema? The split matters because it determines whether Skills is replicable for your company or whether you need your own version of Skills, which is just to say "you need a semantic layer."</p>
+
+      <p><strong>The error analysis.</strong> Of the 5% errors in the with-Skills condition, are they distributed evenly across question types, or concentrated in a category like "anything involving the finance tables"? Aggregate-accuracy numbers in analytics are misleading because the cost of an error is not uniform. A wrong customer count for a board report is an order of magnitude more expensive than a wrong customer count for a product manager's ad-hoc question.</p>
+
+      <p>If I were peer-reviewing this post for the data-engineering equivalent of a workshop submission, I would ask for a stratified accuracy breakdown by question type and an estimate of cost-weighted accuracy. The 95-percent number is suggestive but unverifiable as stated.</p>
+
+      <div class="callout">
+        <p><strong>The point of this challenge is not to call BS.</strong> The architecture probably does work. The point is that the headline number conflates two very different things (the Skills layer being good vs. the model needing very specific context to do analytics at all), and without the breakdown you cannot tell which one you are getting when you replicate it.</p>
+      </div>
+
+      <h2>Challenge 2: "Skills" Is a Semantic Layer With Worse Tooling</h2>
+
+      <p>Anthropic's framing positions Skills as a novel pattern. Read the architecture description carefully and Skills is doing the work of three pre-existing things in the data ecosystem: a semantic layer (metric definitions, joins, grain), a data catalog (schema descriptions, column semantics, ownership), and a runbook library (procedural knowledge about how to answer common question types).</p>
+
+      <p>These three things have mature open-source and commercial tooling. dbt's MetricFlow defines metrics with first-class grain, dimensions, time spine, and constraints, generates the SQL deterministically, and integrates with the existing dbt graph and tests. Cube does similar with a JavaScript-flavoured schema and a query API. LookML has been doing this since 2012. The data catalog space has Atlan, Monte Carlo, DataHub, OpenMetadata, Unity Catalog, all of which let you attach descriptions, tags, owners, and rules to tables and columns.</p>
+
+      <p>The Skills approach trades the structure of these tools for the flexibility of markdown. That trade has costs that the post does not address.</p>
+
+      <p><strong>Markdown is unstructured.</strong> A MetricFlow metric is a typed object with declared dependencies. The dbt manifest knows which metrics depend on which models, which dimensions can join, and what the grain is. Skills are markdown. The agent reads them, the agent decides how to interpret them. Drift between the Skill and the underlying SQL is silent: nothing flags that the metric definition in the Skill no longer matches the metric definition in the warehouse, because they are not the same artefact. You discover the drift when the answer is wrong.</p>
+
+      <p><strong>Markdown is not testable.</strong> A MetricFlow metric has assertions, freshness checks, and downstream dependents that break when you change it. A Skill has prose. You can write tests for the agent's behaviour when given a Skill, but you cannot validate the Skill itself in the way you would validate a typed object. The 65-percent regression in a month, which Anthropic discloses, is exactly the failure mode this design invites.</p>
+
+      <p><strong>Markdown duplicates the catalog.</strong> If your warehouse has good column descriptions and table owners (and if it does not, you have bigger problems than agents), the Skills are restating that metadata in a parallel format. Two systems to maintain instead of one. The post implicitly acknowledges this by recommending humans own definitions; they have re-derived the conclusion every data team reached a decade ago.</p>
+
+      <p>To be fair to Anthropic, there is one thing Skills do better than MetricFlow: they encode <em>procedural</em> knowledge ("when asked about churn, also report the cohort breakdown by acquisition channel; the raw churn number is misleading without it"). This is a real gap in the existing semantic-layer tools. The right framing of Skills is not "novel architecture" but "the missing procedural-knowledge layer on top of an existing semantic layer." That framing would have been more interesting and more accurate.</p>
+
+      <table class="nb-table">
+        <thead>
+          <tr><th>Concern</th><th>Skills (markdown)</th><th>MetricFlow / Cube</th><th>Data catalog</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Metric definitions</td><td>Prose</td><td>Typed</td><td>Tagged</td></tr>
+          <tr><td>Drift detection</td><td>Manual</td><td>dbt tests</td><td>Lineage-based</td></tr>
+          <tr><td>SQL generation</td><td>LLM-generated</td><td>Deterministic</td><td>Out of scope</td></tr>
+          <tr><td>Procedural knowledge</td><td>Yes, first-class</td><td>Out of scope</td><td>Limited</td></tr>
+          <tr><td>Maintenance cost</td><td>High (duplicates schema)</td><td>Medium (one source)</td><td>Medium</td></tr>
+          <tr><td>Tooling maturity</td><td>2025 (new)</td><td>2018+</td><td>2015+</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Challenge 3: The Maintenance Treadmill They Almost Admit</h2>
+
+      <p>The single most important sentence in the entire write-up is this one:</p>
+
+      <div class="quote">
+        <p>"The offline accuracy dropped from about 95% to about 65% within a month because the data model changes every day, and no one takes care of the Skill documents that describe it."</p>
+        <p class="quote-attr">As reported in secondary coverage; phrasing per the Anthropic data team's public discussions</p>
+      </div>
+
+      <p>Read this sentence at face value. The headline result is not stable. It is a snapshot. Without continuous human maintenance of the Skill documents, the system degrades by 30 percentage points in 30 days. That is not a property of the model; that is a property of the architecture. It is also exactly the property every dbt deployment, every Looker deployment, and every Tableau enterprise rollout has shipped with for years.</p>
+
+      <p>The data-engineering community has a term for this: <em>metadata rot</em>. Schema changes faster than the documentation does. The lineage graph diverges from reality. Metrics defined in 2023 no longer match the columns they reference. Data catalogs go stale because nobody updates them. This is not new. The reason MetricFlow's design is more rigid than markdown is precisely to combat this: the metric is the source of truth, and if you change the model the metric breaks loudly.</p>
+
+      <p>Anthropic's response to this in the post is to recommend Claude generate documentation but humans own definitions. This is reasonable and it is also exactly the dbt convention since 2019. The new thing they could add (and which would be a real contribution) is automated drift detection between Skills and the underlying schema, ideally with a regression-test loop that runs the agent against the eval set on every schema change and gates merges that drop accuracy below a threshold. The post does not describe this. If they have it, they should publish it; it would be more valuable than the headline number.</p>
+
+      <p>The honest framing of the maintenance situation is something like: "We built an analytics agent that hits 95% accuracy when its semantic layer is current. When the semantic layer drifts, accuracy degrades faster than for traditional BI tools because the agent is less constrained. We need continuous CI on the agent itself, and most teams will need to build this." That framing would change the engineering conversation. The current framing leaves you thinking "I should add Skills" when you should be thinking "I need a CI pipeline for my semantic layer."</p>
+
+      <h2>Challenge 4: The Cost Picture That Is Completely Missing</h2>
+
+      <p>The post discusses neither the API spend nor the engineering cost of building and maintaining the Skills layer. For an enterprise considering this architecture, both are central to the decision.</p>
+
+      <p>Let me put rough numbers on it. A self-service analytics query in this architecture costs:</p>
+
+      <ul>
+        <li>One or more retrieval calls to fetch relevant Skills.</li>
+        <li>One Claude call to plan the query, with the Skills in context.</li>
+        <li>One or more SQL execution calls against the warehouse.</li>
+        <li>Often, a verification Claude call to sanity-check the result.</li>
+        <li>A response-generation Claude call to produce the natural-language answer.</li>
+      </ul>
+
+      <p>At rough current pricing, a typical multi-step analytics query on a chunky context (the Skills are not small; an analytics query may pull in 10-50k tokens of context) costs $0.15 to $0.80 per query. Anthropic does not disclose their internal cost structure, and they presumably get their own model for free, but for an external team replicating the architecture this matters a lot. A company with 10,000 analytics queries per month is looking at $1,500 to $8,000 per month in API cost. Add the warehouse compute (every query hits the warehouse), and you are at $3,000 to $15,000 per month, with the high end being plausible for a growth-stage company.</p>
+
+      <p>Compare this to the headline benefit: data scientists not answering ad-hoc questions. The break-even depends on how many analyst-hours you save. At a fully-loaded analyst cost of $150/hour, saving 100 hours per month covers $15,000 of agent spend. Whether that is realistic depends on the question distribution (how many of the queries the agent now handles would actually have been written up as analyst work, vs. being curiosity-driven questions that would never have been asked otherwise).</p>
+
+      <p>The engineering cost is the other half. Building the Skills, maintaining the semantic layer, writing the eval set, running the regression loop, doing the adversarial review. From the public descriptions, Anthropic has at least a handful of FTE engineers on this. For a typical enterprise data team of three to ten people, dedicating one FTE to maintenance is a significant tax. The post does not address this.</p>
+
+      <p>The right way to publish a case study like this is to include a unit-economics section. <em>Per query: X cents in API spend, Y cents in warehouse spend, Z hours/month in maintenance. Total cost of ownership per 1k queries: $W. Equivalent analyst cost: $V.</em> Without those numbers, the 95-percent figure is interesting but undecidable from a procurement perspective.</p>
+
+      <h2>Challenge 5: The Long-Tail Problem in Analytics Specifically</h2>
+
+      <p>Aggregate accuracy on a representative eval set is the wrong metric for an executive-facing analytics system. The reason is that analytics has a long tail of high-stakes, low-volume questions whose wrong answers cost orders of magnitude more than the right answers cost to compute correctly.</p>
+
+      <p>Consider the distribution of analytics questions at a typical SaaS company:</p>
+
+      <ul>
+        <li><strong>High-volume, low-stakes (90% of queries):</strong> "How many sign-ups did we have yesterday?" "What is MAU for product X?" Wrong answers here are annoying but recoverable; nobody is making a board decision off these.</li>
+        <li><strong>Medium-volume, medium-stakes (9% of queries):</strong> Cohort analysis, channel attribution, A/B test reads. Wrong answers here can mis-allocate a quarter's worth of marketing spend.</li>
+        <li><strong>Low-volume, high-stakes (1% of queries):</strong> The number that goes into the board deck. The customer-acquisition cost in the S-1 draft. The revenue figure in the press release. Wrong answers here are existential.</li>
+      </ul>
+
+      <p>An aggregate 95% accuracy probably means 95% accuracy on the high-volume questions, similar on the medium-volume, and unknown on the low-volume because they are rare in the eval set by construction. The 5% errors might be distributed in proportion to volume, which makes the headline misleading: it suggests 5% of every type, when in practice the catastrophic errors are concentrated in question types that the eval undersampled.</p>
+
+      <p>The right architecture for this is tiered. Low-stakes questions can use the agent directly with the 5% error rate. Medium-stakes questions should get a second-pass verification (a different model, or a deterministic recomputation). High-stakes questions should not use the agent at all without an analyst in the loop, with the agent doing the heavy SQL writing and the analyst doing the verification.</p>
+
+      <p>Anthropic's post does not address this stratification. The Skills architecture is described as if it is one thing, applied uniformly. A practical deployment needs question-routing, per-question-class evaluation, and explicit handling of the long tail. If you take the post at face value and ship a single-tier agent against your whole question distribution, you will get a board-deck error within six months. Plan accordingly.</p>
+
+      <h2>What Anthropic Got Right (Credit Where It Is Due)</h2>
+
+      <p>I have been hard on the post, deliberately, because the tech press is uncritically repeating the 95-percent number. Engineering deserves a more careful read. That said, several pieces of the work are genuinely good and worth taking seriously.</p>
+
+      <p><strong>The framing of analytics-with-LLMs as a context-and-verification problem is correct.</strong> The single most common failure mode of analytics agents is not bad SQL; it is correct SQL against the wrong table, or correct SQL against the right table with the wrong filter. Both are context failures. The recommended emphasis on a curated semantic layer over auto-generated metric definitions is the right answer.</p>
+
+      <p><strong>The ablation methodology is the right shape.</strong> Comparing with-Skills to without-Skills against a fixed eval is what you would want to see. The honest acknowledgement of the maintenance regression is also rare in industry write-ups and shows the data team is engaging with the problem seriously.</p>
+
+      <p><strong>The recommendation that humans own metric definitions is correct.</strong> The auto-generation finding (auto-generated definitions encode the ambiguities they are supposed to eliminate) is a real result. Every team trying to build "AI on top of the warehouse" should internalise this and stop trying to bootstrap semantic layers from raw schemas. It does not work and the post explains why.</p>
+
+      <p><strong>The procedural-knowledge layer is a real contribution.</strong> The framing of Skills as "instructions for the agent on how to answer common question types" is genuinely the missing piece on top of MetricFlow. If the post had been titled "How we added a procedural-knowledge layer on top of our semantic layer," and had been clear that you need the semantic layer underneath, I would have nothing to push back on.</p>
+
+      <h2>The Architecture I Would Actually Build</h2>
+
+      <p>Given what is publicly known, here is what I would ship for a comparable enterprise analytics agent in 2026, with the load-bearing pieces called out.</p>
+
+      <h3>Layer 1: A real semantic layer, not markdown</h3>
+
+      <p>Use MetricFlow if you are on dbt, Cube if you are not. Define every metric with grain, dimensions, time spine, validity windows, ownership, and tests. The metric is the source of truth. SQL generation is deterministic. Drift between metric and underlying model breaks the build, not the answer.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">metric_active_users.yml</span><span>MetricFlow as the source of truth</span></div>
+<pre><code>metric:
+  name: weekly_active_users
+  description: |
+    Distinct user_id with at least one tracked event in the trailing
+    7 days from the metric reference date. Excludes internal test
+    accounts (is_internal = false). Used for product KPIs and the
+    weekly exec dashboard.
+  owner: product-analytics@company.com
+  type: simple
+  type_params:
+    measure: distinct_users_7d
+  filter: |
+    {{ Dimension('user__is_internal') }} = false
+  meta:
+    tier: high_stakes      # used by router; do not auto-answer
+    last_validated: 2026-05-12
+    validated_against:
+      - product_kpi_dashboard
+      - finance_quarterly_pack
+</code></pre>
+      </div>
+
+      <h3>Layer 2: Named entity linking, not LLM guessing</h3>
+
+      <p>The concept-to-entity ambiguity Anthropic identifies is a real problem. The right solution is not "tell the agent about your entities in prose"; it is a deterministic NEL pipeline. Build a canonical entity store (products, segments, geographies, channels, fiscal periods), and run an NER+linker before the agent ever sees the question. Pass the resolved entity IDs into the prompt, not the raw natural-language tokens.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">resolver.py</span><span>NEL before the agent runs</span></div>
+<pre><code>from typing import TypedDict
+
+class ResolvedEntity(TypedDict):
+    surface_form: str       # what the user said
+    canonical_id: str       # what the warehouse knows it as
+    entity_type: str        # product, segment, region, period, ...
+    confidence: float
+    candidates: list[dict]  # for ambiguous cases, top-k for clarification
+
+def resolve(question: str, store: EntityStore) -&gt; list[ResolvedEntity]:
+    spans = ner_model.extract(question)
+    out = []
+    for span in spans:
+        hits = store.lookup(span.text, span.type)
+        if not hits:
+            continue
+        if hits[0].score &gt; 0.95 and (len(hits) == 1 or
+                                      hits[0].score - hits[1].score &gt; 0.2):
+            out.append(ResolvedEntity(
+                surface_form=span.text, canonical_id=hits[0].id,
+                entity_type=span.type, confidence=hits[0].score,
+                candidates=[]))
+        else:
+            # Ambiguous: include top-k for the agent to ask the user.
+            out.append(ResolvedEntity(
+                surface_form=span.text, canonical_id="", entity_type=span.type,
+                confidence=0.0, candidates=[h.dict() for h in hits[:5]]))
+    return out
+</code></pre>
+      </div>
+
+      <p>This is the part Anthropic's Skills do implicitly and badly. A deterministic resolver is auditable, testable, and degrades gracefully (it returns candidates for the agent to disambiguate). The "skill that tells the model how to interpret entity X" pattern is a worse version of this with no telemetry.</p>
+
+      <h3>Layer 3: Procedural-knowledge skills, still markdown, but typed</h3>
+
+      <p>Where Skills are genuinely useful is for the procedural knowledge that does not fit into a metric definition. Things like "when asked for churn, also report the cohort breakdown" or "monthly numbers are not comparable across fiscal-year boundaries because the company changed its definition in Q3 2024." Keep these as markdown, but give them YAML front matter that declares which entities or metrics they apply to, and load them into context based on the resolved entities from Layer 2.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">skill_churn_caveats.md</span><span>typed procedural knowledge</span></div>
+<pre><code>---
+applies_to_metrics: [gross_churn_rate, net_revenue_retention]
+applies_to_questions: ["churn", "retention", "renewal"]
+load_when: confidence &gt; 0.8
+version: 4
+owner: revenue-analytics@company.com
+last_reviewed: 2026-05-29
+---
+
+# Procedural notes for churn questions
+
+1. Gross churn excludes expansion. If the user asks for "net churn"
+   or "NRR-style", use net_revenue_retention instead.
+
+2. The definition of "active account" changed on 2024-Q3. For
+   period-over-period comparisons spanning this boundary, add a
+   caveat noting the comparability issue.
+
+3. For any churn question covering the &lt; 90-day cohort,
+   the number is noisy. Report with confidence interval.
+
+4. Do not report churn at the SMB segment grain without also showing
+   the COVID-era cohort, which materially distorts averages.
+</code></pre>
+      </div>
+
+      <p>The YAML makes the skill discoverable, scoped, and versioned. A CI pipeline can check that <code>applies_to_metrics</code> references valid MetricFlow metrics; if a metric is renamed, the skill breaks the build instead of silently going stale.</p>
+
+      <h3>Layer 4: Tiered routing on the question</h3>
+
+      <p>Not every question gets the same treatment. Classify questions by stakes (low, medium, high) using a small classifier on the question text and on the resolved entities (questions touching board-deck metrics route high). Different tiers get different verification depth:</p>
+
+      <ul>
+        <li><strong>Low-stakes:</strong> single-pass agent, answer directly.</li>
+        <li><strong>Medium-stakes:</strong> agent generates the SQL, a second model verifies it against the metric definition, and the result is recomputed by a deterministic path (the MetricFlow query API) before being returned.</li>
+        <li><strong>High-stakes:</strong> agent prepares the query, an analyst approves it before execution, and the result is logged for audit. Never auto-answered.</li>
+      </ul>
+
+      <p>This is the architecture Anthropic's post implicitly recommends but does not name.</p>
+
+      <h3>Layer 5: Eval-driven CI on the whole stack</h3>
+
+      <p>Build the eval set the way you would build any other regression suite. 500 to 1,000 question-answer pairs, stratified by stakes, with ground-truth SQL and ground-truth answer. Run it on every PR to MetricFlow, every PR to skills, every PR to the resolver, every schema change in the warehouse. Fail the build on a regression. Track per-tier accuracy separately; aggregate-pass-rate is allowed to drop slightly, per-tier pass on high-stakes is not.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">.github/workflows/analytics-eval.yml</span><span>regression gate on the agent</span></div>
+<pre><code>name: Analytics agent regression
+on: pull_request
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve eval baseline
+        run: ./scripts/fetch_eval_baseline.sh
+      - name: Run agent against eval set
+        run: |
+          python -m analytics_eval \
+            --questions eval/questions.jsonl \
+            --output current.jsonl
+      - name: Compute stratified scores
+        run: |
+          python -m analytics_eval.score \
+            --predictions current.jsonl \
+            --truth eval/truth.jsonl \
+            --strata stakes \
+            --out scores.json
+      - name: Compare against baseline
+        run: |
+          python -m analytics_eval.regression \
+            --current scores.json \
+            --baseline baseline_scores.json \
+            --allow-overall-drop 0.01 \
+            --allow-high-stakes-drop 0.00
+</code></pre>
+      </div>
+
+      <p>This is the maintenance machinery Anthropic's post hints at but does not detail. Without something like this, the 30-percentage-point regression in a month is not a bug; it is the expected outcome.</p>
+
+      <h2>What This Looks Like in Production</h2>
+
+      <p>If you do all of the above, you end up with a system that has the following properties, which differ in important ways from what the Anthropic post implies you should build:</p>
+
+      <table class="nb-table">
+        <thead>
+          <tr><th>Property</th><th>Anthropic write-up implication</th><th>What I would actually ship</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Metric source of truth</td><td>Skill documents</td><td>MetricFlow / Cube</td></tr>
+          <tr><td>Entity resolution</td><td>Implicit in agent</td><td>Deterministic NEL pipeline</td></tr>
+          <tr><td>Procedural knowledge</td><td>Skills (markdown)</td><td>Typed YAML-fronted markdown</td></tr>
+          <tr><td>Question routing</td><td>Single tier</td><td>Stakes-stratified</td></tr>
+          <tr><td>Verification</td><td>Mentioned, not detailed</td><td>Deterministic recompute for medium tier</td></tr>
+          <tr><td>Drift handling</td><td>Manual maintenance</td><td>CI on every change</td></tr>
+          <tr><td>High-stakes questions</td><td>Auto-answered</td><td>Analyst in the loop, never auto</td></tr>
+          <tr><td>Headline accuracy</td><td>One aggregate number</td><td>Per-tier accuracy with cost weighting</td></tr>
+        </tbody>
+      </table>
+
+      <p>You will note that none of this is Claude-specific. It is data engineering with an LLM in the loop, structured to make the LLM safer where it can help and to keep it out of the way where it cannot.</p>
+
+      <h2>The Bigger Pattern: AI-Native Tools Re-Inventing Data-Engineering Discoveries</h2>
+
+      <p>The Anthropic post is a specific instance of a broader pattern I have noticed across the AI-native tooling space. AI companies build something on top of an established field (data engineering, security, distributed systems), discover the same lessons that field already discovered, and present those lessons as novel. The lessons are not novel. The framing is.</p>
+
+      <p>Three examples from 2025 to 2026:</p>
+
+      <ul>
+        <li><strong>"Skills" as semantic layer:</strong> independently re-derived from MetricFlow, Cube, LookML.</li>
+        <li><strong>"Agentic retrieval" as hybrid search:</strong> independently re-derived from BM25+dense+rerank, which Elasticsearch and Vespa have shipped since 2020.</li>
+        <li><strong>"Prompt caching" as content-addressed memoisation:</strong> independently re-derived from CDN caching, which has worked this way since the 1990s.</li>
+      </ul>
+
+      <p>None of these are bad inventions. The companies building them are solving real problems. The pattern worth calling out is the framing: presenting an established technique as a novel pattern by giving it a new name and a different surface API. This makes the tech press easier to feed but it makes the engineering conversation harder, because newcomers think they need to "use Skills" rather than "build a semantic layer" and end up with the worse implementation.</p>
+
+      <p>The right framing for the Anthropic post would have been: <em>"We built an analytics agent. The hard part was not the model; the hard part was the same data-modelling work that BI teams have done for fifteen years. Here is how we did it, with the additions specific to agents (procedural knowledge, tiered routing, eval-driven CI). We benefited a lot from the existing semantic-layer literature; we contribute the procedural-knowledge layer back."</em> That framing would not have produced a viral 95-percent headline, but it would have been more accurate and more useful.</p>
+
+      <h2>Where I Disagree With Myself</h2>
+
+      <p>One steelman of Anthropic's framing is worth taking seriously: it might not be true that every data team can replicate the Skills architecture with MetricFlow plus markdown. It might be that the headline result depends on Claude's specific ability to interpret loosely-structured procedural knowledge in a way that, say, GPT-4 cannot. If that is true, the post is making a stronger claim about model capabilities than I have given it credit for, and the 21-vs-95 ablation is the evidence.</p>
+
+      <p>I do not believe this, but it is the version of the argument I would want to see addressed in a follow-up. The way to test it is to run the same Skills architecture with a different frontier model and report the resulting accuracy. If Claude is materially better than GPT-4 or Gemini in this configuration, that is the actual contribution and it should be the headline. If they are within a few points, then Skills is a portable architecture and the contribution is the architecture, not the model.</p>
+
+      <p>The other steelman is that Anthropic's eval might be intentionally hard. A 21-percent baseline could mean "we constructed an eval to surface the failures we wanted to fix, and we did fix them." In that case the 95-percent number is in a hard-mode-specific sense and the architecture is doing real work. This is plausible. I would still want the eval composition published.</p>
+
+      <h2>Recommended Reading List</h2>
+
+      <p>If the Anthropic post is your first encounter with this problem, here are the prior works that you should read before deciding to "use Skills":</p>
+
+      <ul>
+        <li><strong>MetricFlow design docs</strong> (Transform / dbt Labs, 2022 onwards). The most rigorous treatment of metric definition I know of.</li>
+        <li><strong>Cube semantic layer</strong> documentation. The JavaScript-flavoured alternative. Different aesthetic, same rigour.</li>
+        <li><strong>LookML</strong> reference. Older, more enterprise-shaped, but the original of the genre.</li>
+        <li><strong>The Headless BI papers and posts</strong> from the data community (2021 onwards). Frames the problem of separating metric definition from rendering.</li>
+        <li><strong>OpenMetadata and DataHub</strong> for catalog patterns. The procedural-knowledge layer needs a catalog underneath; build one.</li>
+        <li><strong>Anthropic's actual post</strong>. Read it after the above. You will see the architecture more clearly when you have the vocabulary.</li>
+      </ul>
+
+      <h2>Closing</h2>
+
+      <p>The Anthropic case study is good marketing for Claude, decent engineering, and incomplete documentation of an architecture pattern that has prior art the post does not engage with. The 95-percent headline is suggestive but not verifiable from what is public. The "without Skills, 21%" claim deserves the most scrutiny because it implies a 74-point lift from a markdown layer, which is either a remarkable result or an artefact of the eval construction. We cannot tell which from the post.</p>
+
+      <p>If you are evaluating this architecture for your company, do not start with Skills. Start with a real semantic layer (MetricFlow or Cube), add deterministic entity resolution, write a typed procedural-knowledge layer on top, route by stakes, and put the whole thing under eval-driven CI. The agent goes on top of that stack and provides leverage. The agent does not <em>replace</em> the stack.</p>
+
+      <p>If you are evaluating this for a personal learning project, replicate the ablation. Take a public schema (the Stack Overflow dataset on BigQuery, the Chicago Taxi dataset, anything), generate 500 questions, run them with and without a semantic layer, see what you get. The result will be illuminating regardless of which direction it goes. If you can get above 90% without Skills, the Anthropic post's framing is overstated. If you cannot, the architecture is doing real work and worth investing in. Either way you will have an opinion grounded in evidence rather than in a headline.</p>
+
+      <p>The most useful sentence in the Anthropic post, the one I will be quoting back at engineers for the rest of the year, is the one about offline accuracy dropping to 65% in a month. Frame the entire project around that sentence and you will build something durable. Frame it around the 95% headline and you will build something that worked at the demo and broke in October.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="../index.html#contact">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>
