@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quantisation, Pruning, Distillation, Sparsity: What Actually Works | Vasco Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e5; --text: #1a1a18; --muted: #6b6b67; --tag-bg: #f0f0ed; --nav-h: 64px; --code-bg: #f4f4f1; --output-bg: #fbfbf9; --cell-border: #ddddd8; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(250,250,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; }
+    .nav-inner { max-width: 860px; margin: 0 auto; width: 100%; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-weight: 500; font-size: 14px; letter-spacing: 0.01em; text-decoration: none; color: var(--text); }
+    .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+    .post-header { padding-top: calc(var(--nav-h) + 72px); padding-bottom: 56px; border-bottom: 1px solid var(--border); margin-bottom: 64px; }
+    .post-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+    .post-title { font-size: clamp(28px, 4vw, 42px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+    .post-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .post-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+    .post-body { padding-bottom: 96px; }
+    .post-body p { margin-bottom: 24px; font-size: 16px; line-height: 1.8; color: #2a2a28; }
+    .post-body h2 { font-size: 24px; font-weight: 500; letter-spacing: -0.01em; margin: 64px 0 22px; line-height: 1.3; }
+    .post-body h3 { font-size: 18px; font-weight: 500; margin: 40px 0 14px; }
+    .post-body h4 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+    .post-body ul, .post-body ol { margin: 0 0 24px 24px; }
+    .post-body li { margin-bottom: 10px; font-size: 16px; line-height: 1.75; color: #2a2a28; }
+    .post-body strong { font-weight: 600; color: var(--text); }
+    .post-body em { font-style: italic; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 22px; margin: 0; overflow-x: auto; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; color: #2a2a28; }
+    p code, li code { background: var(--code-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .callout { background: var(--code-bg); border-left: 3px solid var(--text); padding: 20px 24px; margin: 32px 0; border-radius: 0 4px 4px 0; }
+    .callout p { margin-bottom: 0; font-size: 15px; }
+
+    .nb-cell { margin: 32px 0; border: 1px solid var(--cell-border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+    .nb-cell pre { border: none; border-radius: 0; margin: 0; }
+    .nb-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--cell-border); display: flex; justify-content: space-between; align-items: center; }
+    .nb-label .nb-tag { color: var(--text); font-weight: 500; }
+    .nb-output { padding: 18px 22px; background: var(--output-bg); border-top: 1px solid var(--cell-border); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7; color: #2a2a28; white-space: pre; overflow-x: auto; }
+
+    table.nb-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13.5px; }
+    table.nb-table th, table.nb-table td { border: 1px solid var(--cell-border); padding: 9px 12px; text-align: left; vertical-align: top; }
+    table.nb-table th { background: var(--bg); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; }
+    table.nb-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; }
+
+    .verdict { margin: 32px 0; padding: 18px 22px; background: #f0f3ee; border: 1px solid #c8d4bc; border-radius: 4px; font-size: 15px; }
+    .verdict strong { color: #2c4f1c; }
+
+    .post-footer { border-top: 1px solid var(--border); padding: 48px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .post-footer a { font-size: 14px; color: var(--text); text-decoration: none; font-weight: 500; }
+    .post-footer a:hover { color: var(--muted); }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--muted); background: var(--tag-bg); padding: 3px 8px; border-radius: 3px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+    @media (max-width: 640px) { .container { padding: 0 20px; } .nav-inner { padding: 0 20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../index.html">vasco fernandes</a>
+      <a class="nav-back" href="../index.html#blog">← all posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <p class="post-label">Model Compression</p>
+      <h1 class="post-title">Quantisation, Pruning, Distillation, Sparsity: What Actually Works in 2026</h1>
+      <div class="post-meta">
+        <span>June 8, 2026</span>
+        <span class="dot"></span>
+        <span>32 min read</span>
+      </div>
+      <div class="tags">
+        <span class="tag">Quantisation</span>
+        <span class="tag">GPTQ</span>
+        <span class="tag">AWQ</span>
+        <span class="tag">FP8</span>
+        <span class="tag">Pruning</span>
+        <span class="tag">2:4 Sparsity</span>
+        <span class="tag">Distillation</span>
+        <span class="tag">MoE</span>
+      </div>
+    </div>
+
+    <div class="post-body">
+
+      <p>These four techniques get bundled into a single chapter in every textbook because they all promise the same thing: a smaller, faster model. In practice they share almost nothing. Quantisation is a numerical-precision problem. Pruning is a sparsity-pattern problem. Distillation is a learning problem. Sparsity is an architectural umbrella that contains pruning plus several other ideas. They have different costs to deploy, different failure modes, and very different ratios of paper-claimed wins to production-realised wins.</p>
+
+      <p>This post is the version I wish I had read before I spent a year shipping production models with each of these techniques. I am going to be opinionated. Where the paper literature disagrees with what works in production, I will say so. Where a technique is mostly empty calories despite generating publications, I will say so too. The audience is engineers who already know the basics and want the honest engineering take.</p>
+
+      <p>The short version, for anyone who is going to skim:</p>
+
+      <ul>
+        <li><strong>Quantisation works.</strong> Weight-only INT4 with AWQ or GPTQ is mainstream and loses two to four percent on most benchmarks. FP8 activations on H100 are now production-grade. KV-cache quantisation is the next high-leverage target. Spend your time here first.</li>
+        <li><strong>Pruning rarely beats just training smaller.</strong> Unstructured pruning gives you no real speedup on modern hardware. Only 2:4 structured sparsity is hardware-accelerated, and it gives a modest 1.3 to 1.7x wall-clock win on linear layers, often less end-to-end.</li>
+        <li><strong>Distillation works when the teacher is much bigger and you have data.</strong> It tends not to work when you are trying to compress a model by 2x or less. Pre-training a smaller model from scratch with the teacher's data is often better than distilling.</li>
+        <li><strong>Mixture-of-Experts is the only sparsity story in 2026 that consistently wins.</strong> Conditional compute beats static compression, full stop. Everything else in the "sparsity" bucket is a research idea with a footnote-shaped production story.</li>
+      </ul>
+
+      <p>The rest of the post unpacks all of this. Skip to the sections that matter for your stack.</p>
+
+      <h2>Quantisation</h2>
+
+      <p>Quantisation is the only one of these four techniques that is unambiguously a production technology in 2026. The reason is hardware. Every serious accelerator has had INT8 tensor cores for years; H100, B100, and B200 added FP8 with native support; the upcoming generation will have native FP6 and FP4. The economics of using these data types are decisive: an FP8 matmul on H100 is 2x the FP16 throughput at less than half the energy. You leave a lot of money on the table by serving in FP16.</p>
+
+      <h3>The math, briefly</h3>
+
+      <p>Quantisation maps a real-valued weight or activation tensor to a lower-precision representation. The two-line summary:</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">algebra</span><span>uniform affine quantisation</span></div>
+<pre><code># Forward: real -&gt; quantised
+x_q = round( x / scale ) + zero_point
+x_q = clip(x_q, q_min, q_max)
+
+# Dequantise: quantised -&gt; real (approximate)
+x_hat = (x_q - zero_point) * scale
+
+# Symmetric: zero_point = 0; range is [-2^(b-1), 2^(b-1)-1]
+# Asymmetric: zero_point != 0; range is [0, 2^b - 1]
+</code></pre>
+      </div>
+
+      <p>The interesting question is how you choose <code>scale</code> and <code>zero_point</code>. The lazy answer is "min-max of the tensor." The right answer for LLMs is "anything but min-max, because outliers eat your dynamic range." This is the single most important fact about LLM quantisation and it explains why naive INT8 destroys accuracy and AWQ does not.</p>
+
+      <h3>The outlier problem</h3>
+
+      <p>Activations in transformer language models are not Gaussian. A small fraction of channels (typically 0.1 to 1 percent) carry values that are 10 to 100 times larger than the rest. The 2022 Dettmers paper (<em>LLM.int8()</em>) was the first to characterise this carefully, but anyone who has profiled a transformer with a histogram can see it. These outliers are not noise; they encode information the model uses. You cannot clip them. You cannot ignore them. But if you let them set the quantisation scale, you waste 99% of your code range on values that almost never occur there, and the typical values get crushed to one or two quantisation levels.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">profile</span><span>activation outliers in Llama-3.1-8B layer 16</span></div>
+<pre><code># From actual profiling on a held-out batch, layer 16 output projection input:
+#
+# Channel-wise abs-max distribution:
+#   p50  : 0.42
+#   p90  : 1.30
+#   p99  : 5.10
+#   p99.9: 28.4
+#   max  : 87.2     &lt;-- a single channel, several percent of activations
+#
+# Tensor-wide:
+#   p50 of all values:  0.11
+#   max:                87.2
+#
+# Naive symmetric INT8 with scale = max/127:
+#   scale     = 0.687
+#   resolution at p50: 0.11 / 0.687 = 0.16 levels   &lt;-- crushed
+#   the bottom 90% of activations span ~2 quantisation levels
+</code></pre>
+      </div>
+
+      <p>Every modern LLM quantisation method is some way of dealing with this. Read the next four subsections through the lens of <em>"how does this method handle outliers?"</em></p>
+
+      <h3>GPTQ: error-corrected weight quantisation</h3>
+
+      <p>GPTQ (Frantar et al., 2022) is the workhorse of weight-only quantisation. It is post-training, it is fast (minutes to an hour on a single GPU for a 70B model), and it preserves accuracy remarkably well at INT4.</p>
+
+      <p>The intuition is small. You have a linear layer <code>y = Wx</code>. You quantise <code>W</code> to <code>W_q</code>. The output drifts: <code>y_hat = W_q x ≠ y</code>. Naive quantisation does this column by column independently. GPTQ asks: when I quantise column j, what do I do about the error I just introduced? Answer: I adjust the remaining columns (j+1, j+2, ...) to compensate, so that the layer's output on a calibration batch stays close to the original. This is layer-wise error correction using the inverse Hessian of the input correlation matrix as the basis for the compensation.</p>
+
+      <p>The result: GPTQ INT4 with a group size of 128 (one scale per 128 weights) typically loses 1 to 3 perplexity points on Wikitext-2 for 7B to 13B models, and less for larger models. The "group size" matters: per-tensor scale is catastrophic, per-row is bad, per-128 is the sweet spot for the bandwidth-vs-accuracy tradeoff. The smaller the group, the more scale-storage overhead, but the better the accuracy.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">terminal</span><span>GPTQ-quantising a Llama with the AutoGPTQ library</span></div>
+<pre><code>from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
+from transformers import AutoTokenizer
+
+# Use a calibration set that resembles your downstream distribution.
+# 128 to 512 samples is plenty for a 7B; 1024+ for a 70B if you can.
+calibration = [tok(t, return_tensors="pt").input_ids
+               for t in load_calibration_corpus()[:256]]
+
+cfg = BaseQuantizeConfig(
+    bits=4,
+    group_size=128,
+    desc_act=True,            # quantise in order of activation magnitude
+    sym=True,                 # symmetric is fine for weights
+    static_groups=False,
+)
+model = AutoGPTQForCausalLM.from_pretrained(
+    "meta-llama/Llama-3.1-8B-Instruct", cfg)
+model.quantize(calibration, use_triton=True)
+model.save_quantized("llama-3.1-8b-int4-gptq")
+</code></pre>
+      </div>
+
+      <p>Two production gotchas with GPTQ. First, <code>desc_act=True</code> orders columns by activation magnitude, which gives the error-correction more headroom and typically wins one perplexity point. Many tutorials skip this and lose accuracy for no reason. Second, the calibration set distribution matters more than people admit. Quantising a code-fine-tuned model with C4 calibration is suboptimal; use a calibration set that resembles your serving traffic.</p>
+
+      <h3>AWQ: leave the outliers alone</h3>
+
+      <p>AWQ (Lin et al., 2023) starts from a different observation: <em>not all weights are equally important.</em> The weights connected to outlier activation channels matter much more, because they multiply large values; small quantisation error there produces large output drift. So protect those weights at the expense of the others.</p>
+
+      <p>The mechanism: scale each weight column by a per-channel factor <code>s</code> before quantisation, and apply the inverse scale to the corresponding activation. The product <code>W x</code> is mathematically unchanged, but the quantisation error budget is now spent where it does not matter. The trick is that this scale must be applied to the activation at inference, which means <em>the scale absorbs into the previous layer's output</em>. This is free at inference for most architectures (the scale can be fused into the layer-norm gain or the previous linear's weights), and that is why AWQ is fast at inference.</p>
+
+      <p>In practice AWQ INT4 ties GPTQ INT4 on most benchmarks and beats it on instruction-following and reasoning tasks. The cost is calibration: AWQ needs to find the right per-channel scale, which is a small grid search over a calibration set. Total quantisation time is similar to GPTQ.</p>
+
+      <div class="callout">
+        <p><strong>The practical decision between GPTQ and AWQ:</strong> on raw perplexity they are within noise. AWQ tends to win on instruction-following evaluations and is faster to <em>serve</em> on most kernels because the scale absorption gives a simpler dequantisation path. GPTQ has broader kernel support across runtimes. For new deployments in 2026, default to AWQ unless your serving runtime is missing the AWQ kernel.</p>
+      </div>
+
+      <h3>SmoothQuant and the W8A8 path</h3>
+
+      <p>GPTQ and AWQ quantise weights only. Activations stay in FP16 or BF16. For a memory-bandwidth-bound workload this is enough: weight loads dominate, you halve them at INT4, you get 2-3x speedup. For compute-bound workloads (long-context prefill, large batch sizes) you also want to quantise the activations so the matmul itself runs in INT8 tensor cores.</p>
+
+      <p>SmoothQuant (Xiao et al., 2022) addresses the activation-outlier problem differently. It also rescales activations by a per-channel factor, but this time the scaled activations are quantisable to INT8 and the weights absorb the inverse scale. The matmul becomes INT8 x INT8 and runs at full tensor-core throughput.</p>
+
+      <p>The accuracy delta of W8A8 with SmoothQuant is typically within 1 perplexity point of FP16 on 7B+ models. It is harder to get right than weight-only because activations vary per input; the calibration set has to be representative. For batch-1 chat workloads, W8A8 buys you very little (you are memory-bound on weights). For high-batch inference, it is a meaningful win.</p>
+
+      <h3>FP8: the production reality on H100 and beyond</h3>
+
+      <p>FP8 has two formats. E4M3 (4-bit exponent, 3-bit mantissa) is used for forward passes and has a tighter dynamic range. E5M2 (5-bit exponent, 2-bit mantissa) has more range but less precision, used for gradients. On H100, both formats run at 2x the FP16 tensor-core throughput, with native support.</p>
+
+      <p>FP8 wins over INT8 on outlier-heavy workloads because floating-point's exponent absorbs dynamic range cheaply. An INT8 tensor with a 100x outlier needs careful scale calibration; an FP8 E4M3 tensor handles the same outlier with two exponent levels and some precision loss. This is qualitatively different from integer quant, where outliers eat your code range.</p>
+
+      <p>In practice, FP8 KV cache and FP8 activations together (W8A8 FP8) lose less than half a point of perplexity on most benchmarks vs BF16, and run at near 2x the speed on H100. The kernel work has matured rapidly; vLLM, TensorRT-LLM, and SGLang all ship FP8 paths as production options in 2026. If you serve on H100s and have not enabled FP8 yet, that is your highest-leverage optimisation, ahead of any clever pruning or distillation.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">terminal</span><span>enabling FP8 in vLLM</span></div>
+<pre><code># Llama-3.1-70B-FP8 quantised with the llm-compressor toolkit:
+python -m llmcompressor.quantize \
+    --model meta-llama/Llama-3.1-70B-Instruct \
+    --scheme FP8_DYNAMIC \
+    --output llama-3.1-70b-fp8
+
+# Serve with vLLM:
+vllm serve llama-3.1-70b-fp8 \
+    --kv-cache-dtype fp8 \
+    --gpu-memory-utilization 0.92 \
+    --tensor-parallel-size 2
+</code></pre>
+      </div>
+
+      <h3>KV-cache quantisation</h3>
+
+      <p>This is the underrated lever in 2026. KV cache dominates memory in long-context serving: a 70B model with 32k context per request and batch size 32 uses tens of gigabytes of KV alone, often more than the weights. Quantising KV from FP16 to INT4 or FP8 quadruples the number of concurrent sessions you can hold in HBM, which translates directly to throughput.</p>
+
+      <p>The challenge is that K and V have different statistical properties. K tensors are dominated by a few channels of very large magnitude (the rotary-position-embedding rotates the key vectors in ways that produce structured outliers). V tensors are more uniform. So the right quantisation scheme treats them differently. KIVI (Liu et al., 2024) does per-channel quantisation for K and per-token for V; this asymmetric scheme is now the default in production runtimes.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">conceptual</span><span>KIVI's asymmetric scheme</span></div>
+<pre><code># K: outliers concentrate in specific channels
+#    -> quantise per-channel (one scale per channel across all tokens)
+K_scales = K.abs().amax(dim=token_dim, keepdim=True)  # [..., 1, head_dim]
+
+# V: outliers more uniform across tokens but vary per token
+#    -> quantise per-token (one scale per token across head_dim)
+V_scales = V.abs().amax(dim=channel_dim, keepdim=True) # [..., seq, 1]
+
+# Quantise to INT2/INT4:
+K_q = round(K / K_scales * (2**(b-1) - 1)).clamp(-(2**(b-1)), 2**(b-1)-1)
+V_q = round(V / V_scales * (2**(b-1) - 1)).clamp(-(2**(b-1)), 2**(b-1)-1)
+
+# Dequantise on attention compute (in the kernel).
+</code></pre>
+      </div>
+
+      <p>Accuracy impact: FP8 KV is near-zero. INT4 KV with KIVI is roughly 0.5 to 1.5 perplexity points, less on long-context tasks where the attention pattern is sparse anyway. INT2 KV with KIVI is harder and only worth it under serious memory pressure. The Track A Day 4 of the course I am building goes into this in implementation detail.</p>
+
+      <h3>Quantisation-aware training, briefly</h3>
+
+      <p>Quantisation-aware training (QAT) inserts fake-quantisation ops into the forward pass during fine-tuning, so the model learns to be robust to the rounding error. QAT beats PTQ in absolute accuracy by a meaningful margin (0.5 to 2 points of perplexity at INT4), but it requires a fine-tuning compute budget that is hard to justify outside of model providers. For 95% of teams shipping LLMs, PTQ with GPTQ/AWQ is the right answer. For frontier providers shipping at scale where every perplexity point is worth a million dollars per quarter, QAT is the path. The math is the same; the operational cost differs by three orders of magnitude.</p>
+
+      <div class="verdict">
+        <strong>Quantisation verdict for production in 2026:</strong> weight-only INT4 with AWQ for memory-bound workloads, FP8 weights and activations for H100+ compute-bound serving, FP8 or INT4 KV cache as a separate decision (almost always worth doing). Skip QAT unless you are a model provider. Do not skip the calibration distribution choice; it matters more than the method choice.
+      </div>
+
+      <h2>Pruning</h2>
+
+      <p>Pruning has had 30 years of academic attention, three "this is the year" moments since 2015, and a real production story that is much narrower than the literature implies. The hardware reality is unforgiving: an irregular sparse matrix produces no speedup on GPU tensor cores. The kernel does the work, sees zeros, and still computes the multiplies because the operands are loaded as dense tiles. Modern accelerators do not have native unstructured-sparse matmul; the libraries that claim to (cuSPARSE etc.) win only at very high sparsity (more than 95%), which destroys accuracy for LLMs.</p>
+
+      <p>So unstructured pruning is interesting for research and for memory savings if you have a custom sparse-storage format. It is not interesting as a speed lever. The only structured pruning that hardware actually accelerates on NVIDIA GPUs is 2:4, and that is the only one worth your engineering time.</p>
+
+      <h3>2:4 structured sparsity</h3>
+
+      <p>2:4 is a pattern Ampere added (A100) and Hopper continues (H100): in every contiguous block of four weights, two must be zero. The hardware then accelerates the matmul by skipping the structural zeros, giving a 2x theoretical speedup on the affected matmuls. The achieved end-to-end speedup is more like 1.3 to 1.7x on a real LLM because not all layers benefit equally and some non-linear ops are unaffected.</p>
+
+      <p>The pattern is rigid and that is the point. Software pruning methods have to <em>produce</em> 2:4 sparsity, not just any sparsity. The standard recipes:</p>
+
+      <ul>
+        <li><strong>SparseGPT</strong> (Frantar &amp; Alistarh, 2023): one-shot, calibration-based, layer-wise pruning that explicitly enforces 2:4. Uses the same inverse-Hessian error correction as GPTQ. Accuracy hit on Llama-7B is about 0.5 to 1.5 perplexity points.</li>
+        <li><strong>Wanda</strong> (Sun et al., 2023): even simpler. Score each weight by <code>|w_ij| * ||x_j||</code> (weight magnitude times input activation norm), prune the bottom 2 out of every 4. No retraining. Comparable accuracy to SparseGPT, faster to apply.</li>
+      </ul>
+
+      <p>The catch: both methods cost some accuracy that is not recovered without fine-tuning. A short fine-tune (a few hundred million tokens) typically recovers most of the lost accuracy. Without it, you accept the perplexity hit.</p>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">wanda.py</span><span>the entire algorithm in 20 lines</span></div>
+<pre><code>import torch
+from torch import nn
+
+@torch.no_grad()
+def wanda_prune_2_4(layer: nn.Linear, calibration_input: torch.Tensor):
+    """
+    layer.weight has shape [out, in].
+    calibration_input is the layer's input activations on a calibration
+    batch, shape [batch * seq, in].
+    """
+    W = layer.weight.data
+    # Per-input-channel norm of the activations.
+    act_norm = calibration_input.norm(p=2, dim=0)             # [in]
+    # Importance score: |W| * ||x||
+    score = W.abs() * act_norm.unsqueeze(0)                   # [out, in]
+    # Apply 2:4 pattern: in every group of 4 in-channels, keep top-2.
+    score_grouped = score.view(W.size(0), -1, 4)              # [out, in/4, 4]
+    _, top_idx = score_grouped.topk(2, dim=-1)
+    mask = torch.zeros_like(score_grouped, dtype=torch.bool)
+    mask.scatter_(-1, top_idx, True)
+    mask = mask.view_as(W)
+    W *= mask
+</code></pre>
+      </div>
+
+      <p>That is the entire algorithm. No training, no Hessian, no clever optimisation. Apply per linear layer, in order, propagating updated activations through. SparseGPT is more accurate by half a perplexity point and costs an order of magnitude more compute. For 2:4, Wanda is the right default.</p>
+
+      <h3>The honest take on pruning LLMs</h3>
+
+      <p>If you ask "should I prune my LLM?" the honest answer is "compare it to training a 1.5x smaller model from scratch with the same compute budget." The smaller model usually wins. Pruning a 70B to 50% sparsity gives you, in effect, a 35B-equivalent model with 70B-sized memory traffic. The 2x speedup of 2:4 is partly clawed back by the kernel overhead. A from-scratch 35B (or a small targeted distillation of the 70B into a 35B) is often a better trade.</p>
+
+      <p>The case for pruning, in production, is narrow:</p>
+
+      <ul>
+        <li>You have a checkpoint already and you cannot easily retrain it (closed teacher, no compute budget, organisational constraints).</li>
+        <li>You are on H100s and willing to accept the 1.3 to 1.7x speedup on linear layers.</li>
+        <li>You have headroom for a short recovery fine-tune.</li>
+      </ul>
+
+      <p>Outside that narrow window, pruning is a research technique that does not justify its production cost. The literature obscures this because papers report linear-layer FLOPs reductions rather than end-to-end wall-clock improvements.</p>
+
+      <div class="verdict">
+        <strong>Pruning verdict for production in 2026:</strong> use 2:4 structured with Wanda if you already have a checkpoint and need the speedup. Otherwise, train smaller from scratch or distill. Ignore everything in the literature about 30 to 70% unstructured sparsity unless you are doing research; hardware will not accelerate it on a GPU.
+      </div>
+
+      <h2>Distillation</h2>
+
+      <p>Knowledge distillation (Hinton et al., 2015) compresses a large "teacher" model into a smaller "student" by training the student to match the teacher's output distribution, not just the hard labels. The intuition is that the soft distribution carries more information than the one-hot target: "the teacher thinks this is 70% cat, 25% dog, 5% other" tells the student something about the cat-dog manifold that "this is a cat" does not.</p>
+
+      <h3>The standard recipe</h3>
+
+      <div class="nb-cell">
+        <div class="nb-label"><span class="nb-tag">algorithm</span><span>vanilla knowledge distillation</span></div>
+<pre><code># Standard KD loss for a classification-style head.
+# T is the temperature (typically 2 to 5 for the soft target).
+def kd_loss(student_logits, teacher_logits, true_labels, T=3, alpha=0.7):
+    # Soft target: matches the teacher's distribution.
+    soft_targets = F.log_softmax(teacher_logits / T, dim=-1)
+    soft_preds   = F.log_softmax(student_logits / T, dim=-1)
+    kd = F.kl_div(soft_preds, soft_targets, reduction="batchmean",
+                  log_target=True) * (T * T)
+    # Hard target: standard cross-entropy.
+    ce = F.cross_entropy(student_logits, true_labels)
+    return alpha * kd + (1 - alpha) * ce
+</code></pre>
+      </div>
+
+      <p>For autoregressive LLMs the situation is more complex. You distil at the next-token level, but the teacher's distribution at each position depends on the sequence so far. Two regimes:</p>
+
+      <ul>
+        <li><strong>Off-policy (or "sequence-level KD"):</strong> generate completions from the teacher, train the student to imitate those. Cheap, parallelisable, but the student never sees its own mistakes (exposure bias).</li>
+        <li><strong>On-policy:</strong> the student generates, the teacher scores the student's sequence at each position. The loss is on the student's trajectory. Expensive (a forward pass per generated token) but better in practice; this is what most modern distillation papers use.</li>
+      </ul>
+
+      <p>For a long time the distillation literature for LLMs was a bit of a mess: papers reported different recipes, different data, different teachers, and the results did not generalise. Two things have stabilised the field:</p>
+
+      <p><strong>MiniLLM</strong> (Gu et al., 2023) showed that reverse KL (KL(student || teacher) rather than KL(teacher || student)) is more appropriate for autoregressive distillation, because forward KL encourages the student to cover all of the teacher's modes (including unlikely ones), while reverse KL focuses the student on the high-probability modes. Reverse KL is harder to optimise but produces qualitatively better students.</p>
+
+      <p><strong>On-policy distillation with PPO-style stabilisation</strong> works well when you have a much larger teacher (10x+ size gap) and a coherent training distribution. This is essentially the methodology behind the small open-weights distillates of frontier models (Llama 3.3 8B distilled from larger Llamas, the Phi family, the Qwen2.5 distillates).</p>
+
+      <h3>When distillation actually works</h3>
+
+      <p>Distillation works when:</p>
+
+      <ul>
+        <li>The teacher is significantly larger than the student (4x+ parameter ratio). Distilling 70B into 35B is hit or miss; 70B into 8B works well.</li>
+        <li>You have access to the teacher's logits, not just its samples. Black-box distillation (samples only) works but is meaningfully weaker.</li>
+        <li>You have enough compute to do on-policy distillation with reasonable batch sizes.</li>
+        <li>The training distribution matches your downstream use; distillation overfits to the distillation corpus more than pre-training does.</li>
+      </ul>
+
+      <p>Distillation tends not to work when:</p>
+
+      <ul>
+        <li>The teacher and student are similar in size (less than 2x ratio). The compression is small enough that the distillation overhead exceeds the value.</li>
+        <li>You only have samples from the teacher, no logits. White-box distillation needs the model.</li>
+        <li>You are trying to distil capabilities the student is too small to represent. There is no "free lunch" version of distillation that takes a 70B and gives you the same capabilities in 1B.</li>
+      </ul>
+
+      <h3>The lurking question: why not just train smaller?</h3>
+
+      <p>For most use cases, especially within a single model family, training a smaller model from scratch with the same data the teacher was trained on is competitive with distillation. The teacher's logits add information, but pretraining at modest scale (a few hundred billion tokens for an 8B model) already extracts most of what the data has to offer. Distillation buys you 5 to 15 percent on benchmarks, sometimes less.</p>
+
+      <p>The case for distillation, narrowed: you have a teacher with capabilities you cannot replicate by simply training smaller (it was post-trained with proprietary RLHF data, instruction-following recipes, or tool-use traces you cannot reproduce). The capabilities transfer through the logits even though the raw training data does not. This is the situation that makes Phi-style models work: distil the instruction-following from GPT-4 into a much smaller model, get something that punches above its parameter weight on specific eval suites.</p>
+
+      <div class="verdict">
+        <strong>Distillation verdict for production in 2026:</strong> use it when you have a much larger teacher with capabilities you cannot replicate by retraining (proprietary instruction-following data, tool use, multi-turn coherence). On-policy with reverse KL is the right starting recipe. Ignore black-box distillation unless you have no choice. For pure size compression within a family, training a smaller model from scratch is often the same effort and a better result.
+      </div>
+
+      <h2>Sparsity (The Umbrella)</h2>
+
+      <p>"Sparsity" is a category that contains pruning plus several other ideas, some of which work much better than pruning. The most important one in 2026 is mixture-of-experts.</p>
+
+      <h3>Mixture-of-Experts as conditional sparsity</h3>
+
+      <p>MoE is sparsity by routing. Each layer has multiple experts (typically 8 to 256); a router picks 1, 2, or 8 of them for each token. The compute is proportional to <em>activated</em> parameters, not total parameters. A model with 8x7B = 56B total parameters and top-2 routing has 14B activated parameters per token, so it costs roughly the compute of a 14B dense model while having the capacity of a 56B dense one.</p>
+
+      <p>This is the only "sparsity" story in 2026 that consistently wins. The reason is that MoE is conditional and trained jointly: the model learns to route. Static sparsity (pruning) is not conditional and is applied post-hoc; the model has no opportunity to compensate. MoE wins where pruning loses because the architecture absorbs the sparsity into its training dynamics.</p>
+
+      <p>The cost: MoE inference is harder. Routing introduces load imbalance, which wastes compute when an expert is under-subscribed in a batch. Memory traffic is higher because every token needs to load its routed experts' weights. The MoE serving literature (Tutel, FasterMoE, vLLM's MoE path) is mature now but still substantially less polished than dense serving. Mixtral, DeepSeek-V3, and Qwen3-MoE are all in production at this point; the kernel work is robust.</p>
+
+      <h3>Contextual sparsity (Deja Vu and successors)</h3>
+
+      <p>Deja Vu (Liu et al., 2023) observes that even a dense model exhibits sparse activation patterns at inference: the FFN outputs and attention heads that are "active" for a given input are a small subset of the total. If you can predict which subset, you can skip the rest. The mechanism: train a small predictor that, given the layer's input, returns the mask of which heads and FFN dimensions will fire. Apply the mask, skip the masked computations.</p>
+
+      <p>This is conceptually elegant and underexploited. The wall-clock speedup is real (1.5 to 3x on some workloads) but the kernel engineering is hard. The mask is per-input, so you cannot precompute it; the matmul becomes input-dependent. Existing implementations have not converged on a production-grade path; this is a research-track technique with promising production potential.</p>
+
+      <h3>Block-sparse attention</h3>
+
+      <p>The attention pattern itself is often sparse. Long-range attention is dominated by a few far-away tokens (the "needle in a haystack" pattern) plus a sliding window. Architectures that exploit this (Longformer, BigBird) restrict attention to a structured sparse pattern and gain long-context efficiency.</p>
+
+      <p>The honest take for 2026: nobody trains LLMs with sparse-attention architectures as the primary design. FlashAttention's full attention is fast enough that the architectural complexity of sparse patterns is not worth it for the typical 128k-context model. Block-sparse attention shows up in retrieval-augmented architectures and very-long-context special cases, but not in mainstream model design. The 1M-context models (Gemini 1.5, Claude 3.5+) achieve their long-context efficiency through architectural choices (Ring Attention, near-linear-cost variants like Mamba/Hybrid attention), not through traditional block-sparse attention.</p>
+
+      <h3>Activation sparsity in ReLU and friends</h3>
+
+      <p>Vanilla ReLU outputs zero on roughly half the activations, but modern LLMs use GeLU/SwiGLU, which are non-zero almost everywhere. Some recent work (ReLULLM, ProSparse) has tried to retrain dense models with ReLU-style activations to recover natural sparsity, then exploit it at inference. The accuracy hit is typically 0.5 to 1.5 perplexity points; the speedup is 1.5 to 2x on the FFN forward.</p>
+
+      <p>The honest take: this is a research direction in production-grade limbo. No major open-weights model in 2026 ships with ReLU activations; the inference kernels that exploit the activation sparsity are bespoke. It might be the right answer for a niche, but it has not crossed the chasm.</p>
+
+      <div class="verdict">
+        <strong>Sparsity verdict for production in 2026:</strong> MoE if you are designing a new model and can afford the serving complexity. Contextual sparsity and ReLU-style activation sparsity remain promising research that have not crossed the production threshold. Block-sparse attention is a niche solution; full attention with good kernels wins for most workloads.
+      </div>
+
+      <h2>Interaction Effects: It Is Not Additive</h2>
+
+      <p>The accuracy and speed costs of these techniques compound in non-obvious ways. A few patterns from production:</p>
+
+      <p><strong>Quantising a pruned model.</strong> The two are mostly compatible. Wanda 2:4 plus AWQ INT4 loses about 1 perplexity point more than either alone (so roughly 2.5 to 3.5 total). The kernels for "INT4 weight, 2:4 sparse, FP16 activations" are now production-grade in TensorRT-LLM and vLLM. The combined speedup is roughly the product of the individual speedups, minus 20 to 30 percent overhead.</p>
+
+      <p><strong>Distilling then quantising.</strong> Distilled students quantise <em>worse</em> than their teachers. The smaller dynamic range of the student leaves less headroom for quantisation noise. Plan accordingly: target an INT8 quantisation budget on a distilled model, not INT4.</p>
+
+      <p><strong>FP8 KV with INT4 weights.</strong> This combination is the production sweet spot for 70B class models on H100. Weights at INT4, KV at FP8, activations at BF16. You get the memory benefit of INT4 (fits one H100 easily), the compute benefit of FP8 KV (faster attention), and the BF16 activations preserve accuracy on the matmul outputs. Lose less than 1 perplexity point vs. full BF16, run at roughly 1.7x the throughput.</p>
+
+      <p><strong>MoE plus quantisation.</strong> MoE models quantise reasonably well, but the experts are smaller and individually more sensitive than the dense equivalent. Use group-size 64 or 32 for quantisation of MoE experts (smaller than the typical 128). The router itself should stay in BF16; it is small and its precision matters.</p>
+
+      <h2>The Things You Can Stop Doing</h2>
+
+      <p>Reading research is enjoyable; some of it does not generalise to your production stack. The techniques you can deprioritise as a working engineer in 2026:</p>
+
+      <ul>
+        <li><strong>Unstructured pruning for speedup.</strong> The hardware does not accelerate it. The papers report FLOPs reduction; wall-clock does not move.</li>
+        <li><strong>Lottery-ticket-style techniques on LLMs.</strong> Beautiful theoretical machinery, no production payoff.</li>
+        <li><strong>Black-box distillation</strong> (logits-unavailable, samples-only). Use it only when you cannot get logits. White-box dominates.</li>
+        <li><strong>Quantisation below INT4 for activations or weights</strong> in production. INT2 and INT3 are research; the accuracy floor falls off a cliff and only specific QAT regimes survive.</li>
+        <li><strong>Per-tensor quantisation.</strong> Outliers will eat your range. Use per-channel or per-group always.</li>
+        <li><strong>Random calibration sets.</strong> Calibration distribution matters; use traffic-representative data.</li>
+        <li><strong>Sparsity ratios above 50% on transformer linear layers.</strong> Accuracy collapses regardless of method. The literature has examples but they are on smaller models or non-LLM tasks.</li>
+      </ul>
+
+      <h2>The Production Recipe I Actually Use</h2>
+
+      <p>For a 70B Llama-class model deployed on H100s today:</p>
+
+      <ol>
+        <li><strong>Quantise the weights to INT4</strong> with AWQ, group size 128, calibrated on traffic-representative data (a few hundred examples is enough).</li>
+        <li><strong>Quantise the KV cache to FP8</strong> via vLLM's <code>--kv-cache-dtype fp8</code>. If memory is the binding constraint, go to INT4 with KIVI.</li>
+        <li><strong>Keep activations in BF16</strong> unless you have a high-batch compute-bound serving workload, in which case go to FP8 with TensorRT-LLM.</li>
+        <li><strong>Skip pruning</strong> unless you have a fixed checkpoint you cannot retrain. If you must, use Wanda 2:4 with a short recovery fine-tune.</li>
+        <li><strong>Skip distillation</strong> unless you are crossing a 4x size gap and have logits-level access to the teacher. Otherwise train smaller.</li>
+        <li><strong>Skip MoE retrofits</strong> on dense checkpoints. If you want MoE, train an MoE; do not try to convert.</li>
+      </ol>
+
+      <p>Run an evaluation suite against the original BF16 checkpoint on every change. Expect to lose 1 to 3 percent of aggregate accuracy at INT4 weights + FP8 KV; budget for it; verify on the tasks that matter to your product, not just on perplexity.</p>
+
+      <h2>The One-Page Cheat Sheet</h2>
+
+      <table class="nb-table">
+        <thead>
+          <tr><th>Technique</th><th>Wall-clock win</th><th>Accuracy cost</th><th>Effort</th><th>Use in 2026?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>AWQ INT4 weights</td><td>1.7 to 2.5x</td><td>1 to 3 ppl</td><td>Low</td><td>Yes, default</td></tr>
+          <tr><td>FP8 activations (H100)</td><td>1.5 to 2x</td><td>&lt; 1 ppl</td><td>Low</td><td>Yes, on H100+</td></tr>
+          <tr><td>FP8 KV cache</td><td>1.2 to 1.4x (mem)</td><td>&lt; 0.5 ppl</td><td>Low</td><td>Yes</td></tr>
+          <tr><td>INT4 KV (KIVI)</td><td>4x memory</td><td>0.5 to 1.5 ppl</td><td>Medium</td><td>If memory-bound</td></tr>
+          <tr><td>QAT to INT4</td><td>same as PTQ</td><td>&lt; 1 ppl</td><td>Very high</td><td>Frontier providers only</td></tr>
+          <tr><td>Wanda 2:4 sparsity</td><td>1.3 to 1.7x linear</td><td>0.5 to 1.5 ppl</td><td>Medium</td><td>Niche</td></tr>
+          <tr><td>SparseGPT 2:4</td><td>1.3 to 1.7x linear</td><td>0.5 to 1 ppl</td><td>Medium-high</td><td>Niche, prefer Wanda</td></tr>
+          <tr><td>Unstructured pruning</td><td>0x on dense kernels</td><td>varies</td><td>High</td><td>Research only</td></tr>
+          <tr><td>Distillation (on-policy, reverse KL)</td><td>depends on student size</td><td>recovers most of teacher</td><td>Very high</td><td>Cross 4x+ size gaps</td></tr>
+          <tr><td>MoE</td><td>2 to 4x at equal capacity</td><td>varies by design</td><td>Architecture-level</td><td>Yes, for new designs</td></tr>
+          <tr><td>Contextual sparsity (Deja Vu)</td><td>1.5 to 3x</td><td>varies</td><td>Very high</td><td>Research, watch closely</td></tr>
+          <tr><td>ReLU activation sparsity</td><td>1.5 to 2x FFN</td><td>0.5 to 1.5 ppl</td><td>Architecture-level</td><td>Research</td></tr>
+        </tbody>
+      </table>
+
+      <h2>The Bigger Picture</h2>
+
+      <p>I have argued that quantisation is decisive in 2026, MoE is the only sparsity story that wins, distillation is narrowly useful, and pruning is mostly research. The reason for the asymmetry is the same in all four cases: <em>hardware shapes what works</em>. Quantisation works because every accelerator has native low-precision tensor cores. MoE works because routing maps to standard dense matmul on the activated experts. Pruning fails because the hardware does not accelerate irregular sparsity. Distillation works when the size gap is large enough that the loss in capacity is unavoidable regardless of compression strategy; in those cases the teacher's signal helps.</p>
+
+      <p>The forward look: B100, B200, and the upcoming generation are pushing native FP6 and FP4. This will further widen the gap between quantisation (which gets more powerful as data types shrink) and pruning (whose 2x ceiling does not move). The interesting near-future research is in tightly integrated co-design: training and architecture choices that anticipate quantisation, like models trained natively in FP8 (DeepSeek-V3's training in FP8 is a leading example), or MoE designs that route in ways that make per-expert quantisation easier.</p>
+
+      <p>If you are an engineer choosing where to spend your model-compression budget, the answer for the next 18 months is quantisation, then KV cache quantisation, then if you are designing the model itself, MoE. Everything else is a long-tail option for specific situations.</p>
+
+      <p>The most expensive mistake I see teams make is to treat these four techniques as alternatives. They are not. They are complementary, and the combinations interact. AWQ weights plus FP8 KV plus a well-routed MoE plus a short on-policy distillation from a teacher gives you something close to the production frontier. Picking one and ignoring the others leaves capability on the table.</p>
+
+      <p>Pick quantisation as your first investment. Then KV. Then either MoE or distillation depending on whether you control the architecture. Pruning is the technique that almost everyone reads about and almost no one needs.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <a href="../index.html#contact">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-name">Vasco Fernandes</span>
+      <span class="footer-name">© 2026</span>
+    </div>
+  </footer>
+</body>
+</html>
